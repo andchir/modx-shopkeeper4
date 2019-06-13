@@ -2,6 +2,12 @@
 /*
 /*/
 
+!/assets
+/assets/*
+!/assets/components
+/assets/components/*
+!/assets/components/shopkeeper4
+
 !/core
 /core/*
 !/core/components
