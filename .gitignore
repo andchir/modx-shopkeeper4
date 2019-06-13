@@ -1,0 +1,9 @@
+.idea
+/*
+/*/
+
+!/core
+/core/*
+!/core/components
+/core/components/*
+!/core/components/shopkeeper4
