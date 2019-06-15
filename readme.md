@@ -2,6 +2,9 @@
 
 Shopkeeper4 integration for MODX CMS.
 
+Shopkeeper4:
+[https://github.com/andchir/shopkeeper4](https://github.com/andchir/shopkeeper4)
+
 Official site:
 [https://modx-shopkeeper.ru/](https://modx-shopkeeper.ru/)
 
