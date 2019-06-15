@@ -1,7 +1,7 @@
 <?php
 
-require dirname(dirname(__DIR__)) . '/vendor/autoload.php';
-require_once dirname(__DIR__) . '/mongodb_connection/mongodb_connection.class.php';
+require_once dirname(dirname(__DIR__)) . '/vendor/autoload.php';
+require_once dirname(__DIR__) . '/Connection/MongoDBConnection.php';
 
 class Shopkeeper4 {
 
@@ -26,11 +26,18 @@ class Shopkeeper4 {
             'cssUrl' => $assetsUrl . 'css/',
             'assetsUrl' => $assetsUrl,
             'connectorUrl' => $assetsUrl . 'connector.php',
+            'debug' => false,
             'mongodb_url' => 'mongodb://localhost:27017',
-            'mongodb_database' => 'default'
+            'mongodb_database' => 'default',
+            'parent' => '0',
+            'action' => 'products',
+            'rowTpl' => 'shk4_menuRowTpl',
+            'outerTpl' => 'shk4_menuOuterTpl',
+            'cacheKey' => 'shk4Cache',
+            'cache_expires' => 0
         ], $config);
 
-        $this->mongodbConnection = \Andchir\Shopkeeper4\MongoDBConnection::getInstance($this->config['mongodb_url']);
+        $this->mongodbConnection = \Andchir\Shopkeeper4\Connection\MongoDBConnection::getInstance($this->config['mongodb_url']);
     }
 
     /**
@@ -79,22 +86,106 @@ class Shopkeeper4 {
      */
     public function getOutput()
     {
-        $categoryCollection = $this->getCollection('category');
+        $output = '';
+        switch ($this->config['action']) {
+            case 'categories':
+                $output = $this->renderCategories();
+                break;
+        }
         if ($this->getIsError()) {
             return $this->getErrorMessage();
         }
-
-        try {
-            $categories = $categoryCollection->find([], [
-                'sort' => ['_id' => 1]
-            ])->toArray();
-        } catch (\Exception $e) {
-            $this->setErrorMessage($e->getMessage());
-            return '';
+        if ($this->config['debug']) {
+            $this->modx->setPlaceholder('shk4.queryCount', $this->mongodbConnection->getQueryCount());
         }
-
-        return '<pre>' . print_r($categories, true) . '</pre>';
+        return $output;
     }
 
-}
+    /**
+     * @return string
+     */
+    public function renderCategories()
+    {
+        $categories = $this->getListCategories();
+        $output = '';
+        foreach ($categories as $category) {
+            $properties = is_object($category)
+                ? iterator_to_array($category)
+                : $category;
+            $properties['id'] = $properties['_id'];
+            $output .= $this->modx->getChunk($this->config['rowTpl'], $properties);
+        }
+        unset($properties);
+        if ($output && $this->config['outerTpl']) {
+            $properties = [
+                'wrapper' => $output
+            ];
+            $output = $this->modx->getChunk($this->config['outerTpl'], $properties);
+        }
+        return $output;
+    }
 
+    /**
+     * @param bool $saveToPlaceholders
+     * @return array
+     */
+    public function getListCategories($saveToPlaceholders = true)
+    {
+        $categoryCollection = $this->getCollection('category');
+        if (isset($this->modx->placeholders["shk4.categories{$this->config['parent']}"])) {
+            return $this->modx->placeholders["shk4.categories{$this->config['parent']}"];
+        } else {
+            $where = [
+                'isActive' => true,
+                'name' => [
+                    '$ne' => 'root'
+                ]
+            ];
+            if (!$saveToPlaceholders) {
+                $where['parentId'] = (int) $this->config['parent'];
+            }
+            try {
+                $categories = $categoryCollection->find($where, [
+                    'sort' => ['menuIndex' => 1, '_id' => 1]
+                ])->toArray();
+            } catch (\Exception $e) {
+                $this->setErrorMessage($e->getMessage());
+                return [];
+            }
+            $this->mongodbConnection->queryCountIncrement();
+            if ($saveToPlaceholders) {
+                $data = [];
+                foreach ($categories as $category) {
+                    if (!isset($data[$category['parentId']])) {
+                        $data[$category['parentId']] = [];
+                    }
+                    $data[$category->parentId][] = iterator_to_array($category);
+                    if (!$category->isFolder) {
+                        $this->modx->setPlaceholder("shk4.categories{$category->_id}", []);
+                    }
+                }
+                foreach ($data as $key => $val) {
+                    $this->modx->setPlaceholder("shk4.categories{$key}", $val);
+                }
+                return $data[$this->config['parent']] ?? [];
+            }
+            return $categories;
+        }
+    }
+
+    /**
+     * @param array $list
+     * @param array $parent
+     * @return array
+     */
+    public static function createTree(&$list, $parent){
+        $tree = array();
+        foreach ($parent as $k => $l){
+            if(isset($l['id']) && isset($list[$l['id']])){
+                $l['children'] = self::createTree($list, $list[$l['id']]);
+            }
+            $tree[] = $l;
+        }
+        return $tree;
+    }
+}
