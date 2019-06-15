@@ -1,0 +1,13 @@
+{
+    "name": "andchir/modx-shopkeeper4",
+    "description": "Shopping cart and order management system",
+    "authors": [
+        {
+            "name": "andchir",
+            "email": "andchir@gmail.com"
+        }
+    ],
+    "require": {
+        "mongodb/mongodb": "^1.4"
+    }
+}

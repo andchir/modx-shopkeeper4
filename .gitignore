@@ -13,3 +13,4 @@
 !/core/components
 /core/components/*
 !/core/components/shopkeeper4
+/core/components/shopkeeper4/vendor/
