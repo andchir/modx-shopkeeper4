@@ -92,8 +92,8 @@ class Shopkeeper4 {
                 $output = $this->renderCategories();
                 break;
         }
-        if ($this->getIsError()) {
-            return $this->getErrorMessage();
+        if ($this->config['debug'] && $this->getIsError()) {
+            return "<div style=\"color:red;\">ERROR: {$this->getErrorMessage()}</div>";
         }
         if ($this->config['debug']) {
             $this->modx->setPlaceholder('shk4.queryCount', $this->mongodbConnection->getQueryCount());
@@ -131,10 +131,13 @@ class Shopkeeper4 {
      */
     public function getListCategories($saveToPlaceholders = true)
     {
-        $categoryCollection = $this->getCollection('category');
         if (isset($this->modx->placeholders["shk4.categories{$this->config['parent']}"])) {
             return $this->modx->placeholders["shk4.categories{$this->config['parent']}"];
         } else {
+            $categoryCollection = $this->getCollection('category');
+            if (!$categoryCollection) {
+                return [];
+            }
             $where = [
                 'isActive' => true,
                 'name' => [
