@@ -101,7 +101,7 @@ class Shopkeeper4 {
                 break;
         }
         if ($this->config['debug'] && $this->getIsError()) {
-            return "<div style=\"color:red;\">ERROR: {$this->getErrorMessage()}</div>";
+            return "<div style=\"padding:5px 10px; background-color:#f4c8b3; color:#a72323;\">ERROR: {$this->getErrorMessage()}</div>";
         }
         if ($this->config['debug']) {
             $this->modx->setPlaceholder('shk4.queryCount', $this->mongodbConnection->getQueryCount());
