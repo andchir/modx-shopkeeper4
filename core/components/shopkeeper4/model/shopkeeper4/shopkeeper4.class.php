@@ -36,17 +36,20 @@ class Shopkeeper4 {
             'cacheKey' => 'shk4Cache',
             'cache_expires' => 0
         ], $config);
+        $this->config['parent'] = intval($this->config['parent']);
 
         $this->mongodbConnection = \Andchir\Shopkeeper4\Connection\MongoDBConnection::getInstance($this->config['mongodb_url']);
     }
 
     /**
      * @param string $errorMessage
+     * @param int $line
      */
-    public function setErrorMessage($errorMessage)
+    public function setErrorMessage($errorMessage, $line = 0)
     {
         $this->isError = true;
         $this->errorMessage = $errorMessage;
+        $this->modx->log(modX::LOG_LEVEL_ERROR, $errorMessage . ($line ? " LINE: {$line}" : ''));
     }
 
     /**
@@ -73,12 +76,17 @@ class Shopkeeper4 {
     {
         try {
             $dbs = $this->mongodbConnection->getClient()->listDatabases();
-        } catch (\MongoDB\Driver\Exception\AuthenticationException $e) {
-            $this->setErrorMessage($e->getMessage());
+        } catch (\Exception $e) {
+            $this->setErrorMessage($e->getMessage(), __LINE__);
             return null;
         }
-        return $this->mongodbConnection->getClient()
-            ->selectCollection($this->config['mongodb_database'], $collectionName);
+        try {
+            $collection = $this->mongodbConnection->getClient()->selectCollection($this->config['mongodb_database'], $collectionName);
+            return $collection;
+        } catch (\Exception $e) {
+            $this->setErrorMessage($e->getMessage(), __LINE__);
+            return null;
+        }
     }
 
     /**
@@ -145,14 +153,14 @@ class Shopkeeper4 {
                 ]
             ];
             if (!$saveToPlaceholders) {
-                $where['parentId'] = (int) $this->config['parent'];
+                $where['parentId'] = $this->config['parent'];
             }
             try {
                 $categories = $categoryCollection->find($where, [
                     'sort' => ['menuIndex' => 1, '_id' => 1]
                 ])->toArray();
             } catch (\Exception $e) {
-                $this->setErrorMessage($e->getMessage());
+                $this->setErrorMessage($e->getMessage(), __LINE__);
                 return [];
             }
             $this->mongodbConnection->queryCountIncrement();
