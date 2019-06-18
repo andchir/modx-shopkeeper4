@@ -90,6 +90,22 @@ class Shopkeeper4 {
     }
 
     /**
+     * @param string $categoryUri
+     * @return array|null|object
+     */
+    public function getCategory($categoryUri)
+    {
+        $categoryCollection = $this->getCollection('category');
+        if (!$categoryCollection) {
+            return null;
+        }
+        $this->mongodbConnection->queryCountIncrement();
+        return $categoryCollection->findOne([
+            'uri' => $categoryUri
+        ]);
+    }
+
+    /**
      * @return string
      */
     public function getOutput()
@@ -104,7 +120,7 @@ class Shopkeeper4 {
             return "<div style=\"padding:5px 10px; background-color:#f4c8b3; color:#a72323;\">ERROR: {$this->getErrorMessage()}</div>";
         }
         if ($this->config['debug']) {
-            $this->modx->setPlaceholder('shk4.queryCount', $this->mongodbConnection->getQueryCount());
+            $this->modx->setPlaceholder('shk4.queryCount', $this->getMongoQueryCount());
         }
         return $output;
     }
@@ -182,6 +198,44 @@ class Shopkeeper4 {
             }
             return $categories;
         }
+    }
+
+    /**
+     * @return int
+     */
+    public function getMongoQueryCount()
+    {
+        return $this->mongodbConnection->getQueryCount();
+    }
+
+    /**
+     * @param string $key
+     * @return mixed|string
+     */
+    public function getConfigValue($key)
+    {
+        return $this->config[$key] ?? '';
+    }
+
+    /**
+     * Parse uri
+     * @param string $uri
+     * @return array
+     */
+    public static function parseUri($uri)
+    {
+        if (strrpos($uri, '/') === false) {
+            $pageAlias = $uri;
+        } else {
+            $pageAlias = strrpos($uri, '/') < strlen($uri) - 1
+                ? substr($uri, strrpos($uri, '/')+1)
+                : '';
+        }
+        $parentUri = strrpos($uri, '/') !== false
+            ? substr($uri, 0, strrpos($uri, '/')+1)
+            : '';
+        $levelNum = substr_count($parentUri, '/');
+        return [$pageAlias, $parentUri, $levelNum];
     }
 
     /**

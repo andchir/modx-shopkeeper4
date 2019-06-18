@@ -1,0 +1,77 @@
+<?php
+
+/*
+ * Events: OnHandleRequest, OnPageNotFound
+ */
+
+//ini_set('display_errors', 1);
+//error_reporting(E_ALL);
+
+if($modx->context->get('key') == 'mgr') return '';
+
+$parentId = $modx->getOption('catalog_id', null, 2);
+
+$properties = [
+    'mongodb_url' => $modx->getOption('shopkeeper4.mongodb_url'),
+    'mongodb_database' => $modx->getOption('shopkeeper4.mongodb_database'),
+    'debug' => $modx->getOption('shopkeeper4.debug')
+];
+
+require_once $modx->getOption('core_path') . 'components/shopkeeper4/model/shopkeeper4/shopkeeper4.class.php';
+$shopkeeper4 = new Shopkeeper4($modx, $properties);
+
+switch($modx->event->name) {
+
+    case 'OnHandleRequest':
+
+        var_dump('OnHandleRequest');
+
+        //$modx->setPlaceholder('shk4.queryCount', 0);
+
+        break;
+    case 'OnPageNotFound':
+
+        $resource = $modx->getObject('modResource', ['id' => $parentId]);
+        if (!$resource) {
+            return '';
+        }
+
+        $request_param_alias = $modx->getOption('request_param_alias',null,'q');
+        $request_param_id = $modx->getOption('request_param_id',null,'id');
+        $uri = isset($_GET[$request_param_alias]) ? $_GET[$request_param_alias] : '';
+
+        $isCategory = substr($uri, -1) === '/';
+
+        list($pageAlias, $categoryUri, $levelNum) = Shopkeeper4::parseUri($uri);
+
+        $category = $shopkeeper4->getCategory($categoryUri);
+        if (!$category || ($isCategory && !$category->isActive)) {
+            return '';
+        }
+
+        $pageData = [
+            'pagetitle' => $isCategory ? $category->title : ''
+        ];
+
+        $modx->resource = $modx->newObject('modResource');
+        $modx->resource->fromArray(array_merge($resource->toArray(), $pageData));
+        $modx->resource->set('id', $parentId);
+        $modx->resource->set('cacheable', false);
+        $modx->resource->set('class_key', 'modResource');
+        $modx->resource->_content = '';
+        $modx->resource->_output = '';
+        $modx->resource->_isForward = true;
+
+        $modx->resourceIdentifier = $modx->resource->get('id');
+        $modx->resourceMethod = 'id';
+
+        if ($shopkeeper4->getConfigValue('debug')) {
+            $modx->setPlaceholder('shk4.queryCount', $shopkeeper4->getMongoQueryCount());
+        }
+
+        $modx->request->prepareResponse();
+
+        break;
+}
+
+return '';
