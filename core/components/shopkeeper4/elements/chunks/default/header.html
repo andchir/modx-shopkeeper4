@@ -13,11 +13,16 @@
         <div style="margin-right: 175px;">
 
             <div class="dots-menu-container">
-                [[shopkeeper4?
-                &action=`categories`
-                &outerTpl=`shk4_menuTopOuterTpl`
-                &cacheKey=`cache_topmenu`
-                ]]
+                <ul class="dots-menu">
+                    [[!shopkeeper4?
+                    &action=`categories`
+                    &outerTpl=`0`
+                    &cacheKey=`cache_topmenu`
+                    ]]
+                    <li class="nav-item">
+                        <a class="nav-link" href="[[~4]]">Контакты</a>
+                    </li>
+                </ul>
             </div>
 
         </div>

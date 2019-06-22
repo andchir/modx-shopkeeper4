@@ -1,0 +1,26 @@
+[[$head]]
+<body>
+
+[[$header]]
+
+<main role="main" class="container">
+
+    <h1>[[*pagetitle]]</h1>
+
+    [[!shopkeeper4?
+    &action=`render_placeholder_array`
+    &tpl=`shk4_breadcrumbs`
+    &placeholderName=`shk4.breadcrumbs`
+    ]]
+
+    <div class="min-height400">
+
+        [[*content]]
+
+    </div>
+</main>
+
+[[$footer]]
+
+</body>
+</html>

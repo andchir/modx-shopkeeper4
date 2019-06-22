@@ -1,11 +1,10 @@
 <?php
-
 /*
  * Events: OnHandleRequest, OnPageNotFound
  */
 
-//ini_set('display_errors', 1);
-//error_reporting(E_ALL);
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
 
 if($modx->context->get('key') == 'mgr') return '';
 
@@ -20,13 +19,25 @@ $properties = [
 require_once $modx->getOption('core_path') . 'components/shopkeeper4/model/shopkeeper4/shopkeeper4.class.php';
 $shopkeeper4 = new Shopkeeper4($modx, $properties);
 
+$request_param_alias = $modx->getOption('request_param_alias',null,'q');
+$request_param_id = $modx->getOption('request_param_id',null,'id');
+
 switch($modx->event->name) {
 
     case 'OnHandleRequest':
 
-        var_dump('OnHandleRequest');
+        $uri = isset($_GET[$request_param_alias]) ? $_GET[$request_param_alias] : '';
+        list($pageAlias, $categoryUri, $levelNum) = Shopkeeper4::parseUri($uri);
+        $locale = 'ru';
 
-        //$modx->setPlaceholder('shk4.queryCount', 0);
+        $breadcrumbs = $shopkeeper4->getBreadcrumbs($categoryUri, true, $locale);
+        $activeCategoriesIds = array_map(function($item) {
+            return $item['_id'];
+        }, $breadcrumbs);
+
+        $modx->setPlaceholder('shk4.breadcrumbs', $breadcrumbs);
+        $modx->setPlaceholder('shk4.activeCategoriesIds', $activeCategoriesIds);
+        $modx->setPlaceholder('shk4.queryCount', 0);
 
         break;
     case 'OnPageNotFound':
@@ -35,11 +46,9 @@ switch($modx->event->name) {
         if (!$resource) {
             return '';
         }
-
-        $request_param_alias = $modx->getOption('request_param_alias',null,'q');
-        $request_param_id = $modx->getOption('request_param_id',null,'id');
         $uri = isset($_GET[$request_param_alias]) ? $_GET[$request_param_alias] : '';
-
+        list($pageAlias, $categoryUri, $levelNum) = Shopkeeper4::parseUri($uri);
+        $locale = 'ru';
         $isCategory = substr($uri, -1) === '/';
 
         list($pageAlias, $categoryUri, $levelNum) = Shopkeeper4::parseUri($uri);
