@@ -25,20 +25,19 @@ class Shopkeeper4 {
             'jsUrl' => $assetsUrl . 'js/',
             'cssUrl' => $assetsUrl . 'css/',
             'assetsUrl' => $assetsUrl,
-            'connectorUrl' => $assetsUrl . 'connector.php',
-            'debug' => false,
-            'mongodb_url' => 'mongodb://localhost:27017',
-            'mongodb_database' => 'default',
-            'parent' => '0',
-            'action' => 'products',
-            'rowTpl' => 'shk4_menuRowTpl',
-            'outerTpl' => 'shk4_menuOuterTpl',
-            'cacheKey' => 'shk4Cache',
-            'cache_expires' => 0
+            'connectorUrl' => $assetsUrl . 'connector.php'
         ], $config);
-        $this->config['parent'] = intval($this->config['parent']);
 
         $this->mongodbConnection = \Andchir\Shopkeeper4\Connection\MongoDBConnection::getInstance($this->config['mongodb_url']);
+    }
+
+    /**
+     * @param string $key
+     * @param mixed $value
+     */
+    public function updateConfig($key, $value)
+    {
+        $this->config[$key] = $value;
     }
 
     /**
@@ -106,20 +105,38 @@ class Shopkeeper4 {
     }
 
     /**
+     * @param string $action
      * @return string
      */
-    public function getOutput()
+    public function getOutput($action = '')
     {
+        if (!$action) {
+            $action = self::getOption('action', $this->config);
+        }
         $output = '';
-        switch ($this->config['action']) {
+        switch ($action) {
+            case 'render_placeholder_array':
+
+                $placeholderName = self::getOption('placeholderName', $this->config);
+                $chunkName = self::getOption('tpl', $this->config);
+                if ($chunkName
+                    && $placeholderName
+                    && !empty($this->modx->placeholders[$placeholderName])) {
+
+                    $chunk = $this->modx->getObjectGraph('modChunk', ['Source' => []], ['name' => $chunkName]);
+                    $chunkContent = $chunk ? $chunk->getContent() : '';
+                    $output = Shopkeeper4::renderPlaceholderArray($this->modx->placeholders[$placeholderName], $chunkContent);
+                }
+
+                break;
             case 'categories':
                 $output = $this->renderCategories();
                 break;
         }
-        if ($this->config['debug'] && $this->getIsError()) {
-            return "<div style=\"padding:5px 10px; background-color:#f4c8b3; color:#a72323;\">ERROR: {$this->getErrorMessage()}</div>";
-        }
-        if ($this->config['debug']) {
+        if (self::getOption('debug', $this->config)) {
+            if ($this->getIsError()) {
+                return sprintf("<div style=\"padding:5px 10px; background-color:#f4c8b3; color:#a72323;\">ERROR: %s</div>", $this->getErrorMessage());
+            }
             $this->modx->setPlaceholder('shk4.queryCount', $this->getMongoQueryCount());
         }
         return $output;
@@ -137,14 +154,14 @@ class Shopkeeper4 {
                 ? iterator_to_array($category)
                 : $category;
             $properties['id'] = $properties['_id'];
-            $output .= $this->modx->getChunk($this->config['rowTpl'], $properties);
+            $output .= $this->modx->getChunk(self::getOption('rowTpl', $this->config), $properties);
         }
         unset($properties);
-        if ($output && $this->config['outerTpl']) {
+        if ($output && self::getOption('outerTpl', $this->config)) {
             $properties = [
                 'wrapper' => $output
             ];
-            $output = $this->modx->getChunk($this->config['outerTpl'], $properties);
+            $output = $this->modx->getChunk(self::getOption('outerTpl', $this->config), $properties);
         }
         return $output;
     }
@@ -155,8 +172,9 @@ class Shopkeeper4 {
      */
     public function getListCategories($saveToPlaceholders = true)
     {
-        if (isset($this->modx->placeholders["shk4.categories{$this->config['parent']}"])) {
-            return $this->modx->placeholders["shk4.categories{$this->config['parent']}"];
+        $parentId = self::getOption('parent', $this->config);
+        if (isset($this->modx->placeholders["shk4.categories{$parentId}"])) {
+            return $this->modx->placeholders["shk4.categories{$parentId}"];
         } else {
             $categoryCollection = $this->getCollection('category');
             if (!$categoryCollection) {
@@ -169,7 +187,7 @@ class Shopkeeper4 {
                 ]
             ];
             if (!$saveToPlaceholders) {
-                $where['parentId'] = $this->config['parent'];
+                $where['parentId'] = $parentId;
             }
             try {
                 $categories = $categoryCollection->find($where, [
@@ -194,7 +212,7 @@ class Shopkeeper4 {
                 foreach ($data as $key => $val) {
                     $this->modx->setPlaceholder("shk4.categories{$key}", $val);
                 }
-                return $data[$this->config['parent']] ?? [];
+                return $data[$parentId] ?? [];
             }
             return $categories;
         }
@@ -260,12 +278,36 @@ class Shopkeeper4 {
     }
 
     /**
-     * @param string $key
-     * @return mixed|string
+     * @param string $optionName
+     * @param array $properties
+     * @return mixed|null
      */
-    public function getConfigValue($key)
+    public static function getOption($optionName, $properties = [])
     {
-        return $this->config[$key] ?? '';
+        $optionsDefault = [
+            'action' => 'products',
+            'debug' => false,
+            'mongodb_url' => 'mongodb://localhost:27017',
+            'mongodb_database' => 'default',
+            'parent' => '0',
+            'rowTpl' => 'shk4_menuRowTpl',
+            'outerTpl' => 'shk4_menuOuterTpl',
+            'activeClassName' => 'active',
+            'cacheKey' => '',
+            'toPlaceholder' => '',
+            'cache_resource_handler' => 'xPDOFileCache',
+            'cache_expires' => 0
+        ];
+        if (!is_array($properties)) {
+            $properties = [];
+        }
+        if (!empty($properties['action']) && isset($properties[$properties['action'] . '_' . $optionName])) {
+            return $properties[$properties['action'] . '_' . $optionName];
+        }
+        if (isset($properties[$optionName])) {
+            return $properties[$optionName];
+        }
+        return $optionsDefault[$optionName] ?? null;
     }
 
     /**

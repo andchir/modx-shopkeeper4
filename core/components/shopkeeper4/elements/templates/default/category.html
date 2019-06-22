@@ -1,21 +1,40 @@
 [[$head]]
 <body>
 
+[[!shopkeeper4?
+&action=`categories,render_placeholder_array`
+&categories_outerTpl=`0`
+&categories_cacheKey=`cache_topmenu`
+&categories_toPlaceholder=`topmenu`
+&render_placeholder_array_tpl=`shk4_breadcrumbs`
+&render_placeholder_array_placeholderName=`shk4.breadcrumbs`
+&render_placeholder_array_toPlaceholder=`breadcrumbs`
+]]
+
 [[$header]]
 
 <main role="main" class="container">
 
     <h1>[[*pagetitle]]</h1>
 
-    [[!shopkeeper4?
-    &action=`render_placeholder_array`
-    &tpl=`shk4_breadcrumbs`
-    &placeholderName=`shk4.breadcrumbs`
-    ]]
+    [[+breadcrumbs]]
 
     <div class="min-height400">
 
         [[*content]]
+
+        <div class="row">
+            <div class="col-md-3">
+
+                [Фильтры]
+
+            </div>
+            <div class="col-md-9">
+
+
+
+            </div>
+        </div>
 
     </div>
 </main>

@@ -3,9 +3,6 @@
  * Events: OnHandleRequest, OnPageNotFound
  */
 
-//ini_set('display_errors', 1);
-//error_reporting(E_ALL);
-
 if($modx->context->get('key') == 'mgr') return '';
 
 $parentId = $modx->getOption('catalog_id', null, 2);
@@ -15,6 +12,10 @@ $properties = [
     'mongodb_database' => $modx->getOption('shopkeeper4.mongodb_database'),
     'debug' => $modx->getOption('shopkeeper4.debug')
 ];
+if ($properties['debug']) {
+    ini_set('display_errors', 1);
+    error_reporting(E_ALL);
+}
 
 require_once $modx->getOption('core_path') . 'components/shopkeeper4/model/shopkeeper4/shopkeeper4.class.php';
 $shopkeeper4 = new Shopkeeper4($modx, $properties);
@@ -75,7 +76,7 @@ switch($modx->event->name) {
         $modx->resourceIdentifier = $modx->resource->get('id');
         $modx->resourceMethod = 'id';
 
-        if ($shopkeeper4->getConfigValue('debug')) {
+        if ($properties['debug']) {
             $modx->setPlaceholder('shk4.queryCount', $shopkeeper4->getMongoQueryCount());
         }
 
