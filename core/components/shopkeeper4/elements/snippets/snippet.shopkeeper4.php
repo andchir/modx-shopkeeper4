@@ -1,6 +1,6 @@
 <?php
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
+//ini_set('display_errors', 1);
+//error_reporting(E_ALL);
 
 require_once $modx->getOption('core_path') . 'components/shopkeeper4/model/shopkeeper4/shopkeeper4.class.php';
 
@@ -56,19 +56,22 @@ if (!$output) {
     }
 }
 
-// Processing before output
-switch ($scriptProperties['action']) {
-    case 'categories':
-        $activeCategoriesIds = $modx->getPlaceholder('shk4.activeCategoriesIds');
-        $activeClassName = $modx->getOption('activeClassName', $scriptProperties, 'active');
-        if (!empty($activeCategoriesIds)) {
-            $output = str_replace(
-                array_map(function($id) {return "active{$id}-"; }, $activeCategoriesIds),
-                $activeClassName,
-                $output
-            );
-        }
-        break;
+if (!empty($scriptProperties['cacheKey'])) {
+
+    // Processing before output
+    switch ($scriptProperties['action']) {
+        case 'categories':
+            $activeCategoriesIds = $modx->getPlaceholder('shk4.activeCategoriesIds');
+            $activeClassName = $modx->getOption('activeClassName', $scriptProperties, 'active');
+            if (!empty($activeCategoriesIds)) {
+                $output = str_replace(
+                    array_map(function($id) {return "active{$id}-"; }, $activeCategoriesIds),
+                    $activeClassName,
+                    $output
+                );
+            }
+            break;
+    }
 }
 
 return $output;

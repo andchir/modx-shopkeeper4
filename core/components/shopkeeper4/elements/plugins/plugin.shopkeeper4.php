@@ -3,8 +3,8 @@
  * Events: OnHandleRequest, OnPageNotFound
  */
 
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
+//ini_set('display_errors', 1);
+//error_reporting(E_ALL);
 
 if($modx->context->get('key') == 'mgr') return '';
 
@@ -30,10 +30,11 @@ switch($modx->event->name) {
         list($pageAlias, $categoryUri, $levelNum) = Shopkeeper4::parseUri($uri);
         $locale = 'ru';
 
-        $breadcrumbs = $shopkeeper4->getBreadcrumbs($categoryUri, true, $locale);
+        $breadcrumbs = $shopkeeper4->getBreadcrumbs($categoryUri, false, $locale);
         $activeCategoriesIds = array_map(function($item) {
             return $item['_id'];
         }, $breadcrumbs);
+        array_pop($breadcrumbs);
 
         $modx->setPlaceholder('shk4.breadcrumbs', $breadcrumbs);
         $modx->setPlaceholder('shk4.activeCategoriesIds', $activeCategoriesIds);
