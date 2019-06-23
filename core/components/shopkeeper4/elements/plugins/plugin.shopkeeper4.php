@@ -43,6 +43,7 @@ switch($modx->event->name) {
         $modx->setPlaceholder('shk4.activeCategoriesIds', $activeCategoriesIds);
         $modx->setPlaceholder('shk4.queryCount', 0);
         $modx->setPlaceholder('shk4.uri', $uri);
+        $modx->setPlaceholder('shk4.categoryUri',  $categoryUri);
 
         break;
     case 'OnPageNotFound':
@@ -63,10 +64,10 @@ switch($modx->event->name) {
             return '';
         }
 
-        $modx->setPlaceholder('shk4.category', iterator_to_array($category));
+        $modx->setPlaceholder('shk4.category', $category);
         $contentType = $shopkeeper4->getContentType($category);
         if ($contentType) {
-            $modx->setPlaceholder('shk4.contentType', iterator_to_array($contentType));
+            $modx->setPlaceholder('shk4.contentType', $contentType);
         }
 
         $pageData = [

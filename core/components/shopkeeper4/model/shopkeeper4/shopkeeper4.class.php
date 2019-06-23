@@ -101,6 +101,8 @@ class Shopkeeper4 {
         $this->mongodbConnection->queryCountIncrement();
         return $categoryCollection->findOne([
             'uri' => $categoryUri
+        ], [
+            'typeMap' => ['array' => 'array']
         ]);
     }
 
@@ -117,10 +119,11 @@ class Shopkeeper4 {
         if (!$contentTypeCollection) {
             return null;
         }
-        $contentTypeName = $category->contentTypeName;
         $this->mongodbConnection->queryCountIncrement();
         return $contentTypeCollection->findOne([
-            'name' => $contentTypeName
+            'name' => $category->contentTypeName
+        ], [
+            'typeMap' => ['array' => 'array']
         ]);
     }
 
@@ -215,16 +218,18 @@ class Shopkeeper4 {
     {
         $contentType = $this->modx->getPlaceholder('shk4.contentType');
         $uri = $this->modx->getPlaceholder('shk4.uri');
-        if (!$contentType || !is_array($contentType)) {
+        if (!$contentType) {
             $this->setErrorMessage('Content type on found.');
             return [];
         }
-        $productsCollection = $this->getCollection($contentType['collection']);
+        $productsCollection = $this->getCollection($contentType->collection);
         if (!$productsCollection) {
             return [];
         }
         $currentCategory = $this->modx->getPlaceholder('shk4.category');
-        $contentTypeFields = [];
+        $contentType = $this->modx->getPlaceholder('shk4.contentType');
+        $contentTypeFields = $contentType ? $contentType->fields : [];
+
         $aggregateFields = $this->getAggregationFields(
             self::getOption('locale', $this->config),
             self::getOption('localeDefault', $this->config),
@@ -284,30 +289,30 @@ class Shopkeeper4 {
     }
 
     /**
-     * @param array $currentCategory
+     * @param stdClass $currentCategory
      * @param array $contentTypeFields
      * @param array $criteria
      */
-    public function applyCategoryFilter($currentCategory, $contentTypeFields, &$criteria)
+    public function applyCategoryFilter(stdClass $currentCategory, $contentTypeFields, &$criteria)
     {
         $categoriesField = array_filter($contentTypeFields, function($field){
-            return $field['inputType'] == 'categories';
+            return $field->inputType == 'categories';
         });
         $categoriesField = current($categoriesField);
 
         if (!empty($categoriesField)) {
             $orCriteria = [
                 '$or' => [
-                    ['parentId' => $currentCategory['_id']]
+                    ['parentId' => $currentCategory->_id]
                 ]
             ];
-            $orCriteria['$or'][] = ["{$categoriesField['name']}" => [
-                '$elemMatch' => ['$in' => [$currentCategory['_id']]]
+            $orCriteria['$or'][] = ["{$categoriesField->name}" => [
+                '$elemMatch' => ['$in' => [$currentCategory->_id]]
             ]];
             $criteria = ['$and' => [$criteria, $orCriteria]];
 
         } else {
-            $criteria['parentId'] = $currentCategory['_id'];
+            $criteria['parentId'] = $currentCategory->_id;
         }
     }
 
