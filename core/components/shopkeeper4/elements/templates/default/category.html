@@ -2,7 +2,7 @@
 <body>
 
 [[!shopkeeper4?
-&action=`categories,render_placeholder_array,products`
+&action=`categories,render_placeholder_array,products,filters`
 &categories_outerTpl=`0`
 &categories_cacheKey=`cache_topmenu`
 &categories_toPlaceholder=`topmenu`
@@ -12,6 +12,11 @@
 &products_tpl=`shk4_productsItemTpl`
 &products_toPlaceholder=`products`
 &products_rowTpl=`shk4_productsRowTpl`
+&products_totalPlaceholder=`productsTotal`
+&products_emptyMessage=`<div class="alert alert-info">Ничего не найдено.</div>`
+&filters_rowTpl=`shk4_filterBlockTpl`
+&filters_outerTpl=`shk4_filterOuterTpl`
+&filters_toPlaceholder=`filters`
 ]]
 
 [[$header]]
@@ -29,7 +34,13 @@
         <div class="row">
             <div class="col-md-3">
 
-                [Фильтры]
+                [[+filters]]
+
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        shk.updateOptions({priceFilterName: '{{ priceFieldName }}'});
+                    });
+                </script>
 
             </div>
             <div class="col-md-9">
@@ -40,6 +51,8 @@
 
             </div>
         </div>
+
+        [[+products_emptyMessage]]
 
     </div>
 </main>

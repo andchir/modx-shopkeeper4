@@ -158,6 +158,9 @@ class Shopkeeper4 {
             case 'products':
                 $output = $this->renderProducts();
                 break;
+            case 'filters':
+                $output = $this->renderFilters();
+                break;
         }
         if (self::getOption('debug', $this->config)) {
             if ($this->getIsError()) {
@@ -177,7 +180,7 @@ class Shopkeeper4 {
         $output = '';
 
         foreach ($products as $product){
-            $properties = is_object($product)
+            $properties = $product instanceof \MongoDB\Model\BSONDocument
                 ? iterator_to_array($product)
                 : $product;
             $properties['id'] = $properties['_id'];
@@ -195,11 +198,43 @@ class Shopkeeper4 {
         $categories = $this->getListCategories();
         $output = '';
         foreach ($categories as $category) {
-            $properties = is_object($category)
+            $properties = $category instanceof \MongoDB\Model\BSONDocument
                 ? iterator_to_array($category)
                 : $category;
             $properties['id'] = $properties['_id'];
             $output .= $this->modx->getChunk(self::getOption('rowTpl', $this->config), $properties);
+        }
+        unset($properties);
+        if ($output && self::getOption('outerTpl', $this->config)) {
+            $properties = [
+                'wrapper' => $output
+            ];
+            $output = $this->modx->getChunk(self::getOption('outerTpl', $this->config), $properties);
+        }
+        return $output;
+    }
+
+    /**
+     * @return string
+     */
+    public function renderFilters()
+    {
+        $filters = $this->getListFilters();
+        if (empty($filters)) {
+            return '';
+        }
+        $contentType = $this->modx->getPlaceholder('shk4.contentType');
+        $contentTypeFields = $contentType ? $contentType->fields : [];
+        $output = '';
+
+        foreach ($filters->values as $name => $filter){
+            $filterData = self::findOneFromArray($contentTypeFields, 'name', $name);
+            $properties = $filterData instanceof stdClass
+                ? json_decode(json_encode($filterData), true)
+                : $filterData;
+            $chunk = $this->modx->getChunk(self::getOption('rowTpl', $this->config), $properties);
+
+            $output .= $chunk;
         }
         unset($properties);
         if ($output && self::getOption('outerTpl', $this->config)) {
@@ -251,6 +286,12 @@ class Shopkeeper4 {
             $queryOptions['sortOptionsAggregation'],
             $pagesOptions['skip']
         );
+        $this->mongodbConnection->queryCountIncrement();
+
+        $this->modx->setPlaceholder(self::getOption('totalPlaceholder', $this->config), $total);
+        if (!$total && self::getOption('emptyMessage', $this->config)) {
+            $this->modx->setPlaceholder(self::getOption('toPlaceholder', $this->config).'_emptyMessage', self::getOption('emptyMessage', $this->config));
+        }
 
         return $productsCollection->aggregate($pipeline, [
             'cursor' => []
@@ -392,6 +433,30 @@ class Shopkeeper4 {
             }
             return $categories;
         }
+    }
+
+    /**
+     * @return array|null|object
+     */
+    public function getListFilters()
+    {
+        $filtersCollection = $this->getCollection('filters');
+        if (!$filtersCollection) {
+            return [];
+        }
+        $currentCategory = $this->modx->getPlaceholder('shk4.category');
+        try {
+            $filters = $filtersCollection->findOne([
+                'categoryId' => $currentCategory->_id
+            ], [
+                'typeMap' => ['array' => 'array']
+            ]);
+        } catch (\Exception $e) {
+            $this->setErrorMessage($e->getMessage(), __LINE__);
+            return [];
+        }
+        $this->mongodbConnection->queryCountIncrement();
+        return $filters;
     }
 
     /**
@@ -625,6 +690,7 @@ class Shopkeeper4 {
             'parent' => '0',
             'rowTpl' => 'shk4_menuRowTpl',
             'outerTpl' => 'shk4_menuOuterTpl',
+            'totalPlaceholder' => 'total',
             'activeClassName' => 'active',
             'cacheKey' => '',
             'toPlaceholder' => '',
