@@ -13,7 +13,7 @@
 &products_toPlaceholder=`products`
 &products_rowTpl=`shk4_productsRowTpl`
 &products_totalPlaceholder=`productsTotal`
-&products_emptyMessage=`<div class="alert alert-info">Ничего не найдено.</div>`
+&products_limit=`9`
 &filters_rowTpl=`shk4_filterBlockTpl`
 &filters_outerTpl=`shk4_filterOuterTpl`
 &filters_toPlaceholder=`filters`
@@ -38,7 +38,7 @@
 
                 <script>
                     document.addEventListener('DOMContentLoaded', function() {
-                        shk.updateOptions({priceFilterName: '{{ priceFieldName }}'});
+                        shk.updateOptions({priceFilterName: 'price'});
                     });
                 </script>
 
@@ -52,7 +52,7 @@
             </div>
         </div>
 
-        [[+products_emptyMessage]]
+        [[!+productsTotal:eq=`0`:then=`<div class="alert alert-info">Ничего не найдено.</div>`:else=``]]
 
     </div>
 </main>

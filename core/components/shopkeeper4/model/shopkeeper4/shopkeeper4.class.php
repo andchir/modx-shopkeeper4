@@ -276,7 +276,10 @@ class Shopkeeper4 {
         $this->applyCategoryFilter($currentCategory, $contentTypeFields, $criteria);
         $total = $productsCollection->countDocuments($criteria);
 
-        $queryOptions = self::getQueryOptions($uri, $contentTypeFields);
+        $catalogNavSettingsDefaults = [
+            'pageSizeArr' => [(int) self::getOption('limit', $this->config)]
+        ];
+        $queryOptions = self::getQueryOptions($uri, $contentTypeFields, $catalogNavSettingsDefaults);
         $pagesOptions = self::getPagesOptions($queryOptions, $total);
 
         $pipeline = $this->createAggregatePipeline(
@@ -687,7 +690,8 @@ class Shopkeeper4 {
             'localeDefault' => 'en',
             'mongodb_url' => 'mongodb://localhost:27017',
             'mongodb_database' => 'default',
-            'parent' => '0',
+            'parent' => 0,
+            'limit' => 20,
             'rowTpl' => 'shk4_menuRowTpl',
             'outerTpl' => 'shk4_menuOuterTpl',
             'totalPlaceholder' => 'total',

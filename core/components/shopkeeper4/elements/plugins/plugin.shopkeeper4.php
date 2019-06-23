@@ -45,6 +45,9 @@ switch($modx->event->name) {
         $modx->setPlaceholder('shk4.uri', $uri);
         $modx->setPlaceholder('shk4.categoryUri',  $categoryUri);
 
+        $isAdmin = $modx->user && $modx->user->isAuthenticated('mgr') && $modx->user->hasSessionContext('mgr');
+        $modx->setPlaceholder('shk4.isAdmin', $isAdmin ? 1 : 0);
+
         break;
     case 'OnPageNotFound':
 

@@ -3,10 +3,16 @@
         <div class="float-right mt-1 pt-2 pr-3 pr-lg-0">
 
             <div class="d-inline-block">
-                <a class="btn btn-sm btn-outline-primary ml-1" href="/" rel="nofollow">
+                [[!+shk4.isAdmin:eq=`1`:then=`
+                <a class="btn btn-sm btn-outline-primary" data-toggle="tooltip" title="Администрирование" href="/manager" rel="nofollow">
+                    <i class="icon-cog"></i>
+                </a>
+                `:else=`
+                <a class="btn btn-sm btn-outline-primary ml-1" href="/login.html" rel="nofollow">
                     Войти
                     <i class="icon-unlock"></i>
                 </a>
+                `]]
             </div>
 
         </div>
