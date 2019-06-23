@@ -2,13 +2,16 @@
 <body>
 
 [[!shopkeeper4?
-&action=`categories,render_placeholder_array`
+&action=`categories,render_placeholder_array,products`
 &categories_outerTpl=`0`
 &categories_cacheKey=`cache_topmenu`
 &categories_toPlaceholder=`topmenu`
 &render_placeholder_array_tpl=`shk4_breadcrumbs`
-&render_placeholder_array_placeholderName=`shk4.breadcrumbs`
+&render_placeholder_array_placeholderName=`shk4.dataBreadcrumbs`
 &render_placeholder_array_toPlaceholder=`breadcrumbs`
+&products_tpl=`shk4_productsItemTpl`
+&products_toPlaceholder=`products`
+&products_rowTpl=`shk4_productsRowTpl`
 ]]
 
 [[$header]]
@@ -31,7 +34,9 @@
             </div>
             <div class="col-md-9">
 
-
+                <div class="row">
+                [[+products]]
+                </div>
 
             </div>
         </div>

@@ -10,7 +10,9 @@ $parentId = $modx->getOption('catalog_id', null, 2);
 $properties = [
     'mongodb_url' => $modx->getOption('shopkeeper4.mongodb_url'),
     'mongodb_database' => $modx->getOption('shopkeeper4.mongodb_database'),
-    'debug' => $modx->getOption('shopkeeper4.debug')
+    'debug' => $modx->getOption('shopkeeper4.debug'),
+    'locale' => $modx->getOption('cultureKey'),
+    'localeDefault' => $modx->getOption('shopkeeper4.locale_default')
 ];
 if ($properties['debug']) {
     ini_set('display_errors', 1);
@@ -37,9 +39,10 @@ switch($modx->event->name) {
         }, $breadcrumbs);
         array_pop($breadcrumbs);
 
-        $modx->setPlaceholder('shk4.breadcrumbs', $breadcrumbs);
+        $modx->setPlaceholder('shk4.dataBreadcrumbs', $breadcrumbs);
         $modx->setPlaceholder('shk4.activeCategoriesIds', $activeCategoriesIds);
         $modx->setPlaceholder('shk4.queryCount', 0);
+        $modx->setPlaceholder('shk4.uri', $uri);
 
         break;
     case 'OnPageNotFound':
@@ -58,6 +61,12 @@ switch($modx->event->name) {
         $category = $shopkeeper4->getCategory($categoryUri);
         if (!$category || ($isCategory && !$category->isActive)) {
             return '';
+        }
+
+        $modx->setPlaceholder('shk4.category', iterator_to_array($category));
+        $contentType = $shopkeeper4->getContentType($category);
+        if ($contentType) {
+            $modx->setPlaceholder('shk4.contentType', iterator_to_array($contentType));
         }
 
         $pageData = [

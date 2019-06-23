@@ -9,6 +9,8 @@ require_once $modx->getOption('core_path') . 'components/shopkeeper4/model/shopk
 $scriptProperties['mongodb_url'] = $modx->getOption('shopkeeper4.mongodb_url');
 $scriptProperties['mongodb_database'] = $modx->getOption('shopkeeper4.mongodb_database');
 
+$scriptProperties['locale'] = $modx->getOption('cultureKey');
+$scriptProperties['localeDefault'] = $modx->getOption('shopkeeper4.locale_default', null, $scriptProperties['locale']);
 $scriptProperties['toPlaceholder'] = Shopkeeper4::getOption('toPlaceholder', $scriptProperties);
 $scriptProperties['action'] = Shopkeeper4::getOption('action', $scriptProperties);
 $actions = $scriptProperties['action'] ? explode(',', $scriptProperties['action']) : [];
@@ -16,14 +18,13 @@ $actions = array_map('trim', $actions);
 if (count($actions) > 1) {
     $scriptProperties['toPlaceholder'] = 'shk4.ACTION_NAME';
 }
-$shopkeeper4 = new Shopkeeper4($modx, $scriptProperties);
 
+$shopkeeper4 = null;
 $output = null;
 foreach ($actions as $action) {
     
     $cacheOptions = [];
     $scriptProperties['action'] = $action;
-    $shopkeeper4->updateConfig('action', $action);
     $toPlaceholder = Shopkeeper4::getOption('toPlaceholder', $scriptProperties);
     $toPlaceholder = str_replace('ACTION_NAME', $action, $toPlaceholder);
 
@@ -41,7 +42,11 @@ foreach ($actions as $action) {
     }
 
     if (!$output) {
-        $output = $shopkeeper4->getOutput($action);
+        if (!($shopkeeper4 instanceof Shopkeeper4)) {
+            $shopkeeper4 = new Shopkeeper4($modx, $scriptProperties);
+        }
+        $shopkeeper4->updateConfig('action', $action);
+        $output = $shopkeeper4->getOutput();
         // Cache output
         if ($cacheKey) {
             $cached = [
