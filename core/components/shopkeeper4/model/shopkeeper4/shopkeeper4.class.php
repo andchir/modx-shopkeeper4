@@ -226,8 +226,8 @@ class Shopkeeper4 {
         $currentCategory = $this->modx->getPlaceholder('shk4.category');
         $contentTypeFields = [];
         $aggregateFields = $this->getAggregationFields(
-            self::getOption('locale'),
-            self::getOption('localeDefault'),
+            self::getOption('locale', $this->config),
+            self::getOption('localeDefault', $this->config),
             true
         );
         $criteria = [
@@ -246,7 +246,7 @@ class Shopkeeper4 {
             $queryOptions['sortOptionsAggregation'],
             $pagesOptions['skip']
         );
-        
+
         return $productsCollection->aggregate($pipeline, [
             'cursor' => []
         ])->toArray();
