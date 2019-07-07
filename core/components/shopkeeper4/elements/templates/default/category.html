@@ -49,13 +49,21 @@
                 [[+products]]
                 </div>
 
+                [[!+productsTotal:eq=`0`:then=`<div class="alert alert-info">Ничего не найдено.</div>`:else=``]]
+
             </div>
         </div>
 
-        [[!+productsTotal:eq=`0`:then=`<div class="alert alert-info">Ничего не найдено.</div>`:else=``]]
-
     </div>
 </main>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (shk) {
+            shk.filtersInit(true);
+        }
+    });
+</script>
 
 [[$footer]]
 
