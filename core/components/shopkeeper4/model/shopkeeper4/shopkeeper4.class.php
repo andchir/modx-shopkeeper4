@@ -6,10 +6,11 @@ require_once dirname(__DIR__) . '/Connection/MongoDBConnection.php';
 class Shopkeeper4 {
 
     public $modx;
+    public $config = [];
     private $mongodbConnection;
     private $errorMessage = null;
     private $isError = false;
-    public $config = [];
+    private $chunks = [];
 
     public function __construct(modX &$modx, array $config = []) {
         $this->modx =& $modx;
@@ -148,7 +149,7 @@ class Shopkeeper4 {
 
                     $chunk = $this->modx->getObjectGraph('modChunk', ['Source' => []], ['name' => $chunkName]);
                     $chunkContent = $chunk ? $chunk->getContent() : '';
-                    $output = Shopkeeper4::renderPlaceholderArray($this->modx->placeholders[$placeholderName], $chunkContent);
+                    $output = Shopkeeper4::renderTemplate($this->modx->placeholders[$placeholderName], $chunkContent);
                 }
 
                 break;
@@ -226,13 +227,37 @@ class Shopkeeper4 {
         $contentType = $this->modx->getPlaceholder('shk4.contentType');
         $contentTypeFields = $contentType ? $contentType->fields : [];
         $output = '';
+        $chunks = [];
+        $queryOptions = $this->modx->getPlaceholder('shk4.queryOptions');
+        $filtersQueryData = $queryOptions['filter'] ?? [];
 
-        foreach ($filters->values as $name => $filter){
+        foreach ($filters->values as $name => $filterValues){
             $filterData = self::findOneFromArray($contentTypeFields, 'name', $name);
             $properties = $filterData instanceof stdClass
                 ? json_decode(json_encode($filterData), true)
                 : $filterData;
-            $chunk = $this->modx->getChunk(self::getOption('rowTpl', $this->config), $properties);
+            $chunkName = self::getOption('rowTpl', $this->config);
+            $chunk = self::replacePlaceholders($properties, $this->getChunkContent($chunkName));
+
+            $chunkName = 'shk4_filter_' . $filterData->inputType;
+            $chunkDefaultName = 'shk4_filter_default';
+            if (!isset($chunks[$chunkName])) {
+                $chunks[$chunkName] = $this->getChunkContent($chunkName, $chunkDefaultName);
+            }
+            if ($filterData->inputType === 'number') {
+                $filterData->min = min($filterValues);
+                $filterData->max = max($filterValues);
+                $filterData->minValue = isset($filtersQueryData[$name])
+                    ? ($filtersQueryData[$name]['from'] ?? $filterData->min)
+                    : $filterData->min;
+                $filterData->maxValue = isset($filtersQueryData[$name])
+                    ? ($filtersQueryData[$name]['to'] ?? $filterData->max)
+                    : $filterData->max;
+                $filterValues = [];
+            }
+
+            $wrapperContent = self::renderTemplate($filterValues, $this->getChunkContent($chunkName, $chunkDefaultName), $filterData);
+            $chunk = str_replace('[[+wrapper]]', $wrapperContent, $chunk);
 
             $output .= $chunk;
         }
@@ -244,6 +269,32 @@ class Shopkeeper4 {
             $output = $this->modx->getChunk(self::getOption('outerTpl', $this->config), $properties);
         }
         return $output;
+    }
+
+    /**
+     * @param string $chunkName
+     * @param string $chunkDefaultName
+     * @return string
+     */
+    public function getChunkContent($chunkName, $chunkDefaultName = '')
+    {
+        if (isset($this->chunks[$chunkName])) {
+            return $this->chunks[$chunkName];
+        } else if ($chunkDefaultName && isset($this->chunks[$chunkDefaultName])) {
+            return $this->chunks[$chunkDefaultName];
+        }
+        $chunkObj = $this->modx->getObjectGraph('modChunk', ['Source' => []], ['name' => $chunkName]);
+        if ($chunkObj) {
+            $this->chunks[$chunkName] = $chunkObj->getContent();
+            return $this->chunks[$chunkName];
+        }
+        if ($chunkDefaultName) {
+            $chunkObj = $this->modx->getObjectGraph('modChunk', ['Source' => []], ['name' => $chunkDefaultName]);
+            $this->chunks[$chunkDefaultName] = $chunkObj ? $chunkObj->getContent() : '';
+            return $this->chunks[$chunkDefaultName];
+        }
+        $this->chunks[$chunkName] = '';
+        return $this->chunks[$chunkName];
     }
 
     /**
@@ -264,6 +315,15 @@ class Shopkeeper4 {
         $currentCategory = $this->modx->getPlaceholder('shk4.category');
         $contentType = $this->modx->getPlaceholder('shk4.contentType');
         $contentTypeFields = $contentType ? $contentType->fields : [];
+        $queryOptions = $this->modx->getPlaceholder('shk4.queryOptions');
+        $filtersData = $this->getListFilters();
+
+//        $options = [
+//            'currentCategoryUri' => '',
+//            'systemNameField' => '',
+//            'needSortFields' => true
+//        ];
+        //list($filters, $fieldsAll) = $this->getFieldsData($contentTypeFields, $options,'page', $filtersArr, $filtersData, $queryOptions);
 
         $aggregateFields = $this->getAggregationFields(
             self::getOption('locale', $this->config),
@@ -273,13 +333,10 @@ class Shopkeeper4 {
         $criteria = [
             'isActive' => true
         ];
+        $this->applyFilters($queryOptions['filter'], $filtersData, $contentTypeFields, $criteria);
         $this->applyCategoryFilter($currentCategory, $contentTypeFields, $criteria);
         $total = $productsCollection->countDocuments($criteria);
 
-        $catalogNavSettingsDefaults = [
-            'pageSizeArr' => [(int) self::getOption('limit', $this->config)]
-        ];
-        $queryOptions = self::getQueryOptions($uri, $contentTypeFields, $catalogNavSettingsDefaults);
         $pagesOptions = self::getPagesOptions($queryOptions, $total);
 
         $pipeline = $this->createAggregatePipeline(
@@ -358,6 +415,167 @@ class Shopkeeper4 {
         } else {
             $criteria['parentId'] = $currentCategory->_id;
         }
+    }
+
+    /**
+     * @param array $filters
+     * @param array $filtersData
+     * @param array $contentTypeFields
+     * @param $criteria
+     */
+    public function applyFilters($filters, $filtersData, $contentTypeFields, &$criteria)
+    {
+        if (empty($filters)) {
+            return;
+        }
+
+        //echo '<pre>' . print_r($filtersData, true) . '</pre>'; exit;
+        //echo '<pre>' . print_r($contentTypeFields, true) . '</pre>'; exit;
+
+        foreach ($filters as $name => $filter) {
+            if (empty($filter)) {
+                continue;
+            }
+            if (!is_array($filter)) {
+                $filter = [$filter];
+            }
+            $index = array_search($name, array_column($contentTypeFields, 'name'));
+            $outputType = '';
+            if ($index !== false) {
+                $flt = $contentTypeFields[$index];
+                $outputType = $flt->outputType;
+                // Process color filter
+                if ($outputType === 'color') {
+                    foreach ($filter as &$val) {
+                        $val = '#' . $val;
+                    }
+                }
+            }
+            if (isset($filter['from']) && isset($filter['to'])) {
+                $criteria[$name] = ['$gte' => floatval($filter['from']), '$lte' => floatval($filter['to'])];
+            } else if ($outputType === 'parameters') {
+                $fData = [];
+                foreach ($filter as $fValue) {
+                    $fValueArr = explode('__', $fValue);
+                    if (count($fValueArr) < 2) {
+                        continue;
+                    }
+                    $index = array_search($fValueArr[0], array_column($fData, 'name'));
+                    if ($index === false) {
+                        $fData[] = [
+                            'name' => $fValueArr[0],
+                            'values' => []
+                        ];
+                        $index = count($fData) - 1;
+                    }
+                    if (!in_array($fValueArr[1], $fData[$index]['values'])) {
+                        $fData[$index]['values'][] = $fValueArr[1];
+                    }
+                }
+                if (!empty($fData)) {
+                    $criteria[$name] = ['$all' => []];
+                    foreach ($fData as $k => $v) {
+                        $criteria[$name]['$all'][] = [
+                            '$elemMatch' => [
+                                'name' => $v['name'],
+                                'value' => ['$in' => $v['values']]
+                            ]
+                        ];
+                    }
+                }
+            } else {
+                $criteria[$name] = ['$in' => $filter];
+            }
+        }
+    }
+
+    /**
+     * @param $contentTypeFields
+     * @param array $options
+     * @param string $type
+     * @param array $filtersArr
+     * @param array $filtersData
+     * @param array $queryOptions
+     * @return array
+     */
+    public function getFieldsData($contentTypeFields, $options = [], $type = 'page', $filtersArr = [], $filtersData = [], $queryOptions = [])
+    {
+        $filters = [];
+        $fields = [];
+        $filterIndex = 0;
+        $queryOptionsFilter = !empty($queryOptions['filter']) ? $queryOptions['filter'] : [];
+        foreach ($contentTypeFields as $field) {
+            if ($type != 'list' || !empty($field['showInList'])) {
+                if (!isset($field['outputProperties']['chunkName'])) {
+                    $field['outputProperties']['chunkName'] = '';
+                }
+                $fields[] = array_merge($field, [
+                    'listOrder' => $field['listOrder'] ?? 0,
+                    'outputProperties' => array_merge($field['outputProperties'], $options)
+                ]);
+            }
+            if (!empty($field['isFilter'])) {
+                if (!empty($filtersArr[$field['name']])) {
+                    $filters[] = [
+                        'name' => $field['name'],
+                        'title' => $field['title'],
+                        'outputType' => $field['outputType'],
+                        'values' => $filtersArr[$field['name']],
+                        'fieldValues' => $filtersArr[$field['name']],
+                        'index' => $filterIndex,
+                        'order' => !empty($field['filterOrder']) ? $field['filterOrder'] : 0,
+                        'selected' => isset($queryOptionsFilter[$field['name']])
+                            ? is_array($queryOptionsFilter[$field['name']])
+                                ? $queryOptionsFilter[$field['name']]
+                                : [$queryOptionsFilter[$field['name']]]
+                            : []
+                    ];
+                    $filterIndex++;
+                } else if (!empty($filtersData)) {
+                    $fieldFilterData = array_filter($filtersData, function($item) use ($field) {
+                        return $item['fieldName'] === $field['name'];
+                    });
+                    foreach ($fieldFilterData as $fData) {
+                        $fValues = array_map(function($value) use ($fData) {
+                            return $fData['name'] . '__' . $value;
+                        }, $fData['values']);
+                        $filters[] = [
+                            'name' => $field['name'],
+                            'title' => $fData['name'],
+                            'outputType' => $field['outputType'],
+                            'values' => $fData['values'],
+                            'fieldValues' => $fValues,
+                            'index' => $filterIndex,
+                            'order' => !empty($field['filterOrder']) ? $field['filterOrder'] : 0,
+                            'selected' => isset($queryOptionsFilter[$field['name']])
+                                ? is_array($queryOptionsFilter[$field['name']])
+                                    ? $queryOptionsFilter[$field['name']]
+                                    : [$queryOptionsFilter[$field['name']]]
+                                : []
+                        ];
+                        $filterIndex++;
+                    }
+                }
+            }
+        }
+
+        usort($filters, function($a, $b) {
+            if ($a['order'] == $b['order']) {
+                return 0;
+            }
+            return ($a['order'] < $b['order']) ? -1 : 1;
+        });
+
+        if (!empty($options['needSortFields'])) {
+            usort($fields, function($a, $b) {
+                if ($a['listOrder'] == $b['listOrder']) {
+                    return 0;
+                }
+                return ($a['listOrder'] < $b['listOrder']) ? -1 : 1;
+            });
+        }
+
+        return [$filters, $fields];
     }
 
     /**
@@ -614,14 +832,15 @@ class Shopkeeper4 {
         }
         $queryOptions['limit'] = min(abs(intval($queryOptions['limit'])), $queryOptions['limit_max']);
         $queryOptions['page'] = abs(intval($queryOptions['page']));
-
-        if (!empty($queryOptions['filter']) && is_array($queryOptions['filter'])) {
+        if (empty($queryOptions['filter']) || !is_array($queryOptions['filter'])) {
+            $queryOptions['filter'] = [];
+        }
+        if (!empty($queryOptions['filter'])) {
             $queryOptions['filterStr'] = '&' . http_build_query(['filter' => $queryOptions['filter']]);
         }
         if (!empty($queryOptions['query']) && !is_array($queryOptions['query'])) {
             $queryOptions['filterStr'] = '&' . http_build_query(['query' => $queryOptions['query']]);
         }
-
         return $queryOptions;
     }
 
@@ -714,35 +933,60 @@ class Shopkeeper4 {
     }
 
     /**
-     * @param array $inputArray
+     * @param array $inputListArray
      * @param string $chunkContent
+     * @param array $inputOuterArray
      * @param string $prefix
      * @param string $suffix
      * @return string
      */
-    public static function renderPlaceholderArray($inputArray, $chunkContent, $prefix = '[[+', $suffix = ']]')
+    public static function renderTemplate($inputListArray, $chunkContent, $inputOuterArray = [], $prefix = '[[+', $suffix = ']]')
     {
-        if (!is_array($inputArray) || !$chunkContent) {
-            return '';
+        if (!is_array($inputListArray) || !$chunkContent) {
+            return $chunkContent;
         }
         $output = '';
         $chunkParts = self::explodeByArray(['<!-- for -->', '<!-- endfor -->'], $chunkContent);
-        if (count($chunkParts) < 3) {
-            $chunkParts = ['', $chunkParts[0], ''];
-        }
-        foreach ($inputArray as $data) {
-            if (!is_array($data) && !is_object($data)) {
-                continue;
-            }
-            $chunk = $chunkParts[1];
-            foreach ($data as $key => $value) {
-                if (!is_array($value)) {
-                    $chunk = str_replace($prefix.$key.$suffix, $value, $chunk);
+        if (!empty($inputListArray) && count($chunkParts) >= 3) {
+            foreach ($inputListArray as $index => $value) {
+                if (is_array($value) || is_object($value)) {
+                    $data = $value;
+                } else {
+                    $data = ['value' => $value];
                 }
+                $data['index'] = $index;
+                $chunk = $chunkParts[1];
+                $chunk = self::replacePlaceholders($data, $chunk, $prefix, $suffix);
+                $output .= $chunk;
             }
-            $output .= $chunk;
+            $output = implode('', [$chunkParts[0], $output, $chunkParts[2]]);
+        } else {
+            $output = count($chunkParts) >= 3 ? $chunkParts[1] : $chunkParts[0];
         }
-        return implode('', [$chunkParts[0], $output, $chunkParts[2]]);
+        if (!empty($inputOuterArray)) {
+            $output = self::replacePlaceholders($inputOuterArray, $output, $prefix, $suffix);
+        }
+        return $output;
+    }
+
+    /**
+     * @param array $inputArray
+     * @param string $chunkContent
+     * @param string $prefix
+     * @param string $suffix
+     * @return mixed
+     */
+    public static function replacePlaceholders($inputArray, $chunkContent, $prefix = '[[+', $suffix = ']]')
+    {
+        if (!is_array($inputArray) && !is_object($inputArray)) {
+            return $chunkContent;
+        }
+        foreach ($inputArray as $key => $value) {
+            if (!is_array($value)) {
+                $chunkContent = str_replace($prefix.$key.$suffix, $value, $chunkContent);
+            }
+        }
+        return $chunkContent;
     }
 
     /**

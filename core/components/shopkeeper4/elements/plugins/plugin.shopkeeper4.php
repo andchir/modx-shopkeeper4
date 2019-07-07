@@ -60,8 +60,6 @@ switch($modx->event->name) {
         $locale = 'ru';
         $isCategory = substr($uri, -1) === '/';
 
-        list($pageAlias, $categoryUri, $levelNum) = Shopkeeper4::parseUri($uri);
-
         $category = $shopkeeper4->getCategory($categoryUri);
         if (!$category || ($isCategory && !$category->isActive)) {
             return '';
@@ -72,6 +70,12 @@ switch($modx->event->name) {
         if ($contentType) {
             $modx->setPlaceholder('shk4.contentType', $contentType);
         }
+        $contentTypeFields = $contentType ? $contentType->fields : [];
+        $catalogNavSettingsDefaults = [
+            'pageSizeArr' => [(int) Shopkeeper4::getOption('limit')]
+        ];
+        $queryOptions = Shopkeeper4::getQueryOptions($uri, $contentTypeFields, $catalogNavSettingsDefaults);
+        $modx->setPlaceholder('shk4.queryOptions', $queryOptions);
 
         $pageData = [
             'pagetitle' => $isCategory ? $category->title : ''
