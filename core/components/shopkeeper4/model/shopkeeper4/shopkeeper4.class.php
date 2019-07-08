@@ -333,7 +333,7 @@ class Shopkeeper4 {
         $criteria = [
             'isActive' => true
         ];
-        $this->applyFilters($queryOptions['filter'], $filtersData, $contentTypeFields, $criteria);
+        $this->applyFilters($queryOptions['filter'], $contentTypeFields, $criteria);
         $this->applyCategoryFilter($currentCategory, $contentTypeFields, $criteria);
         $total = $productsCollection->countDocuments($criteria);
 
@@ -419,11 +419,10 @@ class Shopkeeper4 {
 
     /**
      * @param array $filters
-     * @param array $filtersData
      * @param array $contentTypeFields
      * @param $criteria
      */
-    public function applyFilters($filters, $filtersData, $contentTypeFields, &$criteria)
+    public function applyFilters($filters, $contentTypeFields, &$criteria)
     {
         if (empty($filters)) {
             return;
