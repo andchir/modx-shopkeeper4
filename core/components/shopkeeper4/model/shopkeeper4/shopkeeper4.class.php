@@ -162,6 +162,9 @@ class Shopkeeper4 {
             case 'filters':
                 $output = $this->renderFilters();
                 break;
+            case 'pagination':
+                $output = $this->renderPagination();
+                break;
         }
         if (self::getOption('debug', $this->config)) {
             if ($this->getIsError()) {
@@ -186,6 +189,67 @@ class Shopkeeper4 {
                 : $product;
             $properties['id'] = $properties['_id'];
             $output .= $this->modx->getChunk(self::getOption('rowTpl', $this->config), $properties);
+        }
+
+        return $output;
+    }
+
+    /**
+     * Render catalog pagination
+     * @return string
+     */
+    public function renderPagination()
+    {
+        $queryOptions = $this->modx->getPlaceholder('shk4.queryOptions');
+        $total = $this->modx->getPlaceholder(self::getOption('totalPlaceholder', $this->config));
+        $pagesOptions = self::getPagesOptions($queryOptions, $total);
+
+        if ($pagesOptions['total'] <= 1) {
+            return '';
+        }
+
+        $output = '';
+        $skipped = false;
+        $categoryUri = '/' . $this->modx->getPlaceholder('shk4.categoryUri');
+        $pages = range(1, $pagesOptions['total']);
+        $pageNavTpl = self::getOption('pageNavTpl', $this->config);
+        $pageActiveTpl = self::getOption('pageActiveTpl', $this->config);
+        $pageNavOuterTpl = self::getOption('pageNavOuterTpl', $this->config);
+        $pagePrevTpl = self::getOption('pagePrevTpl', $this->config);
+        $pageNextTpl = self::getOption('pageNextTpl', $this->config);
+        $pageSkippedTpl = self::getOption('pageSkippedTpl', $this->config);
+
+        $categoryUri .= '?limit=' . $pagesOptions['limit'] . $queryOptions['filterStr'];
+
+        foreach ($pages as $page) {
+            if ($page > 2
+                && $page < $pagesOptions['total'] - 1
+                && ($page < $pagesOptions['current'] - 2 || $page > $pagesOptions['current'] + 2)) {
+                    if (!$skipped) {
+                        $output .= $pageSkippedTpl;
+                    }
+                $skipped = true;
+            } else {
+                $skipped = false;
+                $output .= self::replacePlaceholders([
+                    'pageNo' => $page,
+                    'href' => $categoryUri . '&page=' . $page
+                ], $pagesOptions['current'] == $page ? $pageActiveTpl : $pageNavTpl);
+            }
+        }
+
+        if ($pagePrevTpl && $pagesOptions['current'] != $pagesOptions['prev']) {
+            $output = self::replacePlaceholders([
+                'href' => $categoryUri . '&page=' . $pagesOptions['prev']
+                ], $pagePrevTpl) . $output;
+        }
+        if ($pageNextTpl && $pagesOptions['current'] != $pagesOptions['next']) {
+            $output .= self::replacePlaceholders([
+                'href' => $categoryUri . '&page=' . $pagesOptions['next']
+            ], $pageNextTpl);
+        }
+        if ($pageNavOuterTpl) {
+            $output = self::replacePlaceholders(['wrapper' =>  $output], $pageNavOuterTpl);
         }
 
         return $output;
@@ -335,8 +399,9 @@ class Shopkeeper4 {
         ];
         $this->applyFilters($queryOptions['filter'], $contentTypeFields, $criteria);
         $this->applyCategoryFilter($currentCategory, $contentTypeFields, $criteria);
-        $total = $productsCollection->countDocuments($criteria);
 
+        $total = $productsCollection->countDocuments($criteria);
+        $this->modx->setPlaceholder(self::getOption('totalPlaceholder', $this->config), $total);
         $pagesOptions = self::getPagesOptions($queryOptions, $total);
 
         $pipeline = $this->createAggregatePipeline(
@@ -348,7 +413,6 @@ class Shopkeeper4 {
         );
         $this->mongodbConnection->queryCountIncrement();
 
-        $this->modx->setPlaceholder(self::getOption('totalPlaceholder', $this->config), $total);
         if (!$total && self::getOption('emptyMessage', $this->config)) {
             $this->modx->setPlaceholder(self::getOption('toPlaceholder', $this->config).'_emptyMessage', self::getOption('emptyMessage', $this->config));
         }
@@ -909,15 +973,21 @@ class Shopkeeper4 {
             'mongodb_url' => 'mongodb://localhost:27017',
             'mongodb_database' => 'default',
             'parent' => 0,
-            'limit' => 20,
+            'limit' => 21,
             'rowTpl' => 'shk4_menuRowTpl',
             'outerTpl' => 'shk4_menuOuterTpl',
-            'totalPlaceholder' => 'total',
+            'totalPlaceholder' => 'products_total',
             'activeClassName' => 'active',
             'cacheKey' => '',
             'toPlaceholder' => '',
             'cache_resource_handler' => 'xPDOFileCache',
-            'cache_expires' => 0
+            'cache_expires' => 0,
+            'pageNavOuterTpl' => '',
+            'pagePrevTpl' => '',
+            'pageNextTpl' => '',
+            'pageNavTpl' => '',
+            'pageActiveTpl' => '',
+            'pageSkippedTpl' => ''
         ];
         if (!is_array($properties)) {
             $properties = [];

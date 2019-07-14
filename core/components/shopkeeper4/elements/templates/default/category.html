@@ -2,21 +2,32 @@
 <body>
 
 [[!shopkeeper4?
-&action=`categories,render_placeholder_array,products,filters`
+&action=`categories,render_placeholder_array,products,filters,pagination`
+
 &categories_outerTpl=`0`
 &categories_cacheKey=`cache_topmenu`
 &categories_toPlaceholder=`topmenu`
+
 &render_placeholder_array_tpl=`shk4_breadcrumbs`
 &render_placeholder_array_placeholderName=`shk4.dataBreadcrumbs`
 &render_placeholder_array_toPlaceholder=`breadcrumbs`
+
 &products_tpl=`shk4_productsItemTpl`
 &products_toPlaceholder=`products`
 &products_rowTpl=`shk4_productsRowTpl`
-&products_totalPlaceholder=`productsTotal`
 &products_limit=`9`
+
 &filters_rowTpl=`shk4_filterBlockTpl`
 &filters_outerTpl=`shk4_filterOuterTpl`
 &filters_toPlaceholder=`filters`
+
+&pagination_pageNavOuterTpl=`<div><ul class="pagination pagination-rounded">[[+wrapper]]</ul></div>`
+&pagination_pagePrevTpl=`<li class="page-item"><a class="page-link" href="[[+href]]"><span aria-hidden="true">&laquo;</span></a></li>`
+&pagination_pageNextTpl=`<li class="page-item"><a class="page-link" href="[[+href]]"><span aria-hidden="true">&raquo;</span></a></li>`
+&pagination_pageNavTpl=`<li class="page-item"><a class="page-link" href="[[+href]]">[[+pageNo]]</a></li>`
+&pagination_pageActiveTpl=`<li class="page-item active"><a class="page-link" href="[[+href]]">[[+pageNo]]</a></li>`
+&pagination_pageSkippedTpl=`<li class="page-item disabled"><a class="page-link" href="#" tabindex="-1">...</a></li>`
+&pagination_toPlaceholder=`pagination`
 ]]
 
 [[$header]]
@@ -49,7 +60,9 @@
                 [[+products]]
                 </div>
 
-                [[!+productsTotal:eq=`0`:then=`<div class="alert alert-info">Ничего не найдено.</div>`:else=``]]
+                [[!+products_total:eq=`0`:then=`<div class="alert alert-info">Ничего не найдено.</div>`:else=``]]
+
+                [[+pagination]]
 
             </div>
         </div>
