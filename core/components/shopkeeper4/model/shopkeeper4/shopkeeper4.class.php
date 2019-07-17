@@ -108,6 +108,42 @@ class Shopkeeper4 {
     }
 
     /**
+     * @param int $categoryId
+     * @param string $pageAlias
+     * @param string $collectionName
+     * @return mixed|null
+     */
+    public function getContent($categoryId, $pageAlias, $collectionName)
+    {
+        $contentCollection = $this->getCollection($collectionName);
+        if (!$contentCollection) {
+            return null;
+        }
+        $aggregateFields = $this->getAggregationFields(
+            self::getOption('locale', $this->config),
+            self::getOption('localeDefault', $this->config),
+            true
+        );
+        $pipeline = $this->createAggregatePipeline(
+            [
+                'name' => $pageAlias,
+                'parentId' => (int) $categoryId,
+                'isActive' => true
+            ],
+            $aggregateFields,
+            1
+        );
+        $this->mongodbConnection->queryCountIncrement();
+        $contentObject = $contentCollection->aggregate($pipeline, [
+            'cursor' => []
+        ])->toArray();
+        if (empty($contentObject)) {
+            return null;
+        }
+        return current($contentObject);
+    }
+
+    /**
      * @param $category
      * @return null|object
      */
@@ -170,8 +206,8 @@ class Shopkeeper4 {
             if ($this->getIsError()) {
                 return sprintf('<div style="padding:5px 10px; background-color:#f4c8b3; color:#a72323;">ERROR: %s</div>', $this->getErrorMessage());
             }
-            $this->modx->setPlaceholder('shk4.queryCount', $this->getMongoQueryCount());
         }
+        $this->modx->setPlaceholder('shk4.queryCount', $this->getMongoQueryCount());
         return $output;
     }
 
@@ -200,8 +236,11 @@ class Shopkeeper4 {
      */
     public function renderPagination()
     {
-        $queryOptions = $this->modx->getPlaceholder('shk4.queryOptions');
-        $total = $this->modx->getPlaceholder(self::getOption('totalPlaceholder', $this->config));
+        $queryOptions = $this->modx->getPlaceholder('shk4.queryOptions') ?? [];
+        if (empty($queryOptions)) {
+            $queryOptions = ['page' => 1, 'limit' => self::getOption('limit')];
+        }
+        $total = $this->modx->getPlaceholder(self::getOption('totalPlaceholder', $this->config)) ?: 0;
         $pagesOptions = self::getPagesOptions($queryOptions, $total);
 
         if ($pagesOptions['total'] <= 1) {
@@ -401,6 +440,7 @@ class Shopkeeper4 {
         $this->applyCategoryFilter($currentCategory, $contentTypeFields, $criteria);
 
         $total = $productsCollection->countDocuments($criteria);
+        $this->mongodbConnection->queryCountIncrement();
         $this->modx->setPlaceholder(self::getOption('totalPlaceholder', $this->config), $total);
         $pagesOptions = self::getPagesOptions($queryOptions, $total);
 
@@ -491,9 +531,6 @@ class Shopkeeper4 {
         if (empty($filters)) {
             return;
         }
-
-        //echo '<pre>' . print_r($filtersData, true) . '</pre>'; exit;
-        //echo '<pre>' . print_r($contentTypeFields, true) . '</pre>'; exit;
 
         foreach ($filters as $name => $filter) {
             if (empty($filter)) {
@@ -973,7 +1010,7 @@ class Shopkeeper4 {
             'mongodb_url' => 'mongodb://localhost:27017',
             'mongodb_database' => 'default',
             'parent' => 0,
-            'limit' => 21,
+            'limit' => 12,
             'rowTpl' => 'shk4_menuRowTpl',
             'outerTpl' => 'shk4_menuOuterTpl',
             'totalPlaceholder' => 'products_total',

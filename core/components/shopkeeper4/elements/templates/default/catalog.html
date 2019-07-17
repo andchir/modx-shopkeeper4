@@ -1,0 +1,28 @@
+[[$head]]
+<body>
+
+[[!shopkeeper4?
+&action=`categories,render_placeholder_array,products,filters,pagination`
+
+&categories_outerTpl=`0`
+&categories_toPlaceholder=`topmenu`
+&categories_cacheKey=`cache_topmenu`
+]]
+
+[[$header]]
+
+<main role="main" class="container">
+
+    <div class="min-height400">
+
+        <h1>[[*pagetitle]]</h1>
+
+        [[*content]]
+
+    </div>
+</main>
+
+[[$footer]]
+
+</body>
+</html>

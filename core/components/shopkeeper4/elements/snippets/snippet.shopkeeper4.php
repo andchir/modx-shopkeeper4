@@ -83,4 +83,8 @@ foreach ($actions as $action) {
     }
 }
 
+if ($shopkeeper4 instanceof Shopkeeper4) {
+    $modx->setPlaceholder('shk4.queryCount', $shopkeeper4->getMongoQueryCount());
+}
+
 return $output;

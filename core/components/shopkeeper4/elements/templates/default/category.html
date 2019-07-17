@@ -5,8 +5,8 @@
 &action=`categories,render_placeholder_array,products,filters,pagination`
 
 &categories_outerTpl=`0`
-&categories_cacheKey=`cache_topmenu`
 &categories_toPlaceholder=`topmenu`
+&categories_cacheKey=`cache_topmenu`
 
 &render_placeholder_array_tpl=`shk4_breadcrumbs`
 &render_placeholder_array_placeholderName=`shk4.dataBreadcrumbs`
@@ -20,6 +20,7 @@
 &filters_rowTpl=`shk4_filterBlockTpl`
 &filters_outerTpl=`shk4_filterOuterTpl`
 &filters_toPlaceholder=`filters`
+&filters_cacheKey=`catalog_filters[[*id]]`
 
 &pagination_pageNavOuterTpl=`<div><ul class="pagination pagination-rounded">[[+wrapper]]</ul></div>`
 &pagination_pagePrevTpl=`<li class="page-item"><a class="page-link" href="[[+href]]"><span aria-hidden="true">&laquo;</span></a></li>`
@@ -34,11 +35,11 @@
 
 <main role="main" class="container">
 
-    <h1>[[*pagetitle]]</h1>
-
     [[+breadcrumbs]]
 
     <div class="min-height400">
+
+        <h1>[[*pagetitle]]</h1>
 
         [[*content]]
 
@@ -46,6 +47,14 @@
             <div class="col-md-3">
 
                 [[+filters]]
+
+                [[!+shk4.filtersCount:gt=`0`:then=`
+                <div class="my-2">
+                    <a class="btn btn-info btn-sm btn-block shk-button-filters-reset" href="/[[+shk4.categoryUri]]">
+                        Сброс
+                    </a>
+                </div>
+                `:else=``]]
 
                 <script>
                     document.addEventListener('DOMContentLoaded', function() {
@@ -73,7 +82,9 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         if (shk) {
-            shk.filtersInit(true);
+            shk.onAfterInit(function() {
+                shk.filtersInit(true);
+            });
         }
     });
 </script>

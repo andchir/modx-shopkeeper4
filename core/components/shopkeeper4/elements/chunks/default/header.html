@@ -4,15 +4,15 @@
 
             <div class="d-inline-block">
                 [[!+shk4.isAdmin:eq=`1`:then=`
-                <a class="btn btn-sm btn-outline-primary" data-toggle="tooltip" title="Администрирование" href="/manager" rel="nofollow">
+                <a class="btn btn-sm btn-outline-primary" data-toggle="tooltip" title="Администрирование" href="/manager/" rel="nofollow">
                     <i class="icon-cog"></i>
-                </a>
-                `:else=`
+                </a>`:else=``]]
+                [[!+modx.user.id:eq=`0`:then=`
                 <a class="btn btn-sm btn-outline-primary ml-1" href="/login.html" rel="nofollow">
                     Войти
                     <i class="icon-unlock"></i>
                 </a>
-                `]]
+                `:else=``]]
             </div>
 
         </div>

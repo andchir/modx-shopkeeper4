@@ -3,9 +3,13 @@
  * Events: OnHandleRequest, OnPageNotFound
  */
 
+/** @var array $scriptProperties */
+
 if($modx->context->get('key') == 'mgr') return '';
 
-$parentId = $modx->getOption('catalog_id', null, 2);
+$catalogTemplateId = $modx->getOption('catalogTemplateId', $scriptProperties, 2);
+$catalogRootTemplateId = $modx->getOption('catalogRootTemplateId', $scriptProperties, $catalogTemplateId);
+$contentPageTemplateId = $modx->getOption('contentPageTemplateId', $scriptProperties, 3);
 
 $properties = [
     'mongodb_url' => $modx->getOption('shopkeeper4.mongodb_url'),
@@ -32,12 +36,15 @@ switch($modx->event->name) {
         $uri = isset($_GET[$request_param_alias]) ? $_GET[$request_param_alias] : '';
         list($pageAlias, $categoryUri, $levelNum) = Shopkeeper4::parseUri($uri);
         $locale = 'ru';
+        $isCategory = substr($uri, -1) === '/';
 
         $breadcrumbs = $shopkeeper4->getBreadcrumbs($categoryUri, false, $locale);
         $activeCategoriesIds = array_map(function($item) {
             return $item['_id'];
         }, $breadcrumbs);
-        array_pop($breadcrumbs);
+        if ($isCategory) {
+            array_pop($breadcrumbs);
+        }
 
         $modx->setPlaceholder('shk4.dataBreadcrumbs', $breadcrumbs);
         $modx->setPlaceholder('shk4.activeCategoriesIds', $activeCategoriesIds);
@@ -51,10 +58,6 @@ switch($modx->event->name) {
         break;
     case 'OnPageNotFound':
 
-        $resource = $modx->getObject('modResource', ['id' => $parentId]);
-        if (!$resource) {
-            return '';
-        }
         $uri = isset($_GET[$request_param_alias]) ? $_GET[$request_param_alias] : '';
         list($pageAlias, $categoryUri, $levelNum) = Shopkeeper4::parseUri($uri);
         $locale = 'ru';
@@ -64,6 +67,9 @@ switch($modx->event->name) {
         if (!$category || ($isCategory && !$category->isActive)) {
             return '';
         }
+        if (!$category->parentId) {// Root category
+            $catalogTemplateId = $catalogRootTemplateId;
+        }
 
         $modx->setPlaceholder('shk4.category', $category);
         $contentType = $shopkeeper4->getContentType($category);
@@ -72,18 +78,29 @@ switch($modx->event->name) {
         }
         $contentTypeFields = $contentType ? $contentType->fields : [];
         $catalogNavSettingsDefaults = [
-            'pageSizeArr' => [(int) Shopkeeper4::getOption('limit')]
+            'pageSizeArr' => Shopkeeper4::stringToArray($modx->getOption('shopkeeper4.catalog_page_size', null, '12,24,60')),
+            'orderBy' => $modx->getOption('shopkeeper4.catalog_default_order_by', null, 'title_asc')
         ];
         $queryOptions = Shopkeeper4::getQueryOptions($uri, $contentTypeFields, $catalogNavSettingsDefaults);
+        $filtersQueryData = $queryOptions['filter'] ?? [];
         $modx->setPlaceholder('shk4.queryOptions', $queryOptions);
+        $modx->setPlaceholder('shk4.filtersCount', count($filtersQueryData));
 
-        $pageData = [
-            'pagetitle' => $isCategory ? $category->title : ''
-        ];
+        if ($isCategory) {
+            $pageData = $category ? json_decode(json_encode($category), true) : [];
+        } else {
+            $contentObject = $shopkeeper4->getContent($category->_id, $pageAlias, $contentType->collection);
+            $pageData = $contentObject ? json_decode(json_encode($contentObject), true) : [];
+        }
+        $pageData['id'] = $pageData['_id'] ?? 0;
+        if (!isset($pageData['pagetitle'])) {
+            $pageData['pagetitle'] = $pageData['title'] ?? '';
+        }
 
         $modx->resource = $modx->newObject('modResource');
-        $modx->resource->fromArray(array_merge($resource->toArray(), $pageData));
-        $modx->resource->set('id', $parentId);
+        $modx->resource->fromArray($pageData);
+        $modx->resource->set('template', $isCategory ? $catalogTemplateId : $contentPageTemplateId);
+        $modx->resource->set('id', $pageData['id']);
         $modx->resource->set('cacheable', false);
         $modx->resource->set('class_key', 'modResource');
         $modx->resource->_content = '';
