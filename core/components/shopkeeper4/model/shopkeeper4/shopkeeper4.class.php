@@ -220,9 +220,7 @@ class Shopkeeper4 {
         $output = '';
 
         foreach ($products as $product){
-            $properties = $product instanceof \MongoDB\Model\BSONDocument
-                ? iterator_to_array($product)
-                : $product;
+            $properties = self::arrayFlatten($product);
             $properties['id'] = $properties['_id'];
             $output .= $this->modx->getChunk(self::getOption('rowTpl', $this->config), $properties);
         }
@@ -302,9 +300,7 @@ class Shopkeeper4 {
         $categories = $this->getListCategories();
         $output = '';
         foreach ($categories as $category) {
-            $properties = $category instanceof \MongoDB\Model\BSONDocument
-                ? iterator_to_array($category)
-                : $category;
+            $properties = self::objectToArray($category);
             $properties['id'] = $properties['_id'];
             $output .= $this->modx->getChunk(self::getOption('rowTpl', $this->config), $properties);
         }
@@ -742,7 +738,7 @@ class Shopkeeper4 {
                     if (!isset($data[$category['parentId']])) {
                         $data[$category['parentId']] = [];
                     }
-                    $data[$category->parentId][] = iterator_to_array($category);
+                    $data[$category->parentId][] = self::objectToArray($category);
                     if (!$category->isFolder) {
                         $this->modx->setPlaceholder("shk4.categories{$category->_id}", []);
                     }
@@ -945,6 +941,17 @@ class Shopkeeper4 {
     }
 
     /**
+     * @param string $input
+     * @return mixed
+     */
+    public function removeModxTags($input)
+    {
+        $input = preg_replace($this->modx->sanitizePatterns['tags1'], '', $input);
+        $input = preg_replace($this->modx->sanitizePatterns['tags2'], '', $input);
+        return $input;
+    }
+
+    /**
      * @param array $queryOptions
      * @param int $itemsTotal
      * @param array $catalogNavSettingsDefaults
@@ -1141,6 +1148,60 @@ class Shopkeeper4 {
             $tree[] = $l;
         }
         return $tree;
+    }
+
+    /**
+     * @param mixed $input
+     * @return array|mixed
+     */
+    public static function objectToArray($input)
+    {
+        if ($input instanceof stdClass) {
+            return json_decode(json_encode($input), true);
+        }
+        if ($input instanceof \MongoDB\Model\BSONDocument) {
+            return iterator_to_array($input);
+        }
+        return $input;
+    }
+
+    /**
+     * @param array|object $input
+     * @param string $parentKey
+     * @param array $placeholders
+     * @return array
+     */
+    public static function createPlaceholdersArray($input, $parentKey = '', $placeholders = [])
+    {
+        $input = self::objectToArray($input);
+        foreach ($input as $key => $value) {
+            if (is_object($value)) {
+                $placeholders = self::createPlaceholdersArray($value, ($parentKey ? $parentKey.'.' : '') . $key, $placeholders);
+            } else {
+                $placeholders[($parentKey ? $parentKey.'.' : '') . $key] = $value;
+            }
+        }
+        return $placeholders;
+    }
+
+    /**
+     * Array convert to flatten keys
+     * @param array $input
+     * @param string $prefix
+     * @return array
+     */
+    public static function arrayFlatten($input, $prefix = '') {
+        $input = self::objectToArray($input);
+        $result = [];
+        foreach($input as $key=> $value) {
+            if(is_array($value) || is_object($value)) {
+                $result = $result + self::arrayFlatten($value, $prefix . $key . '.');
+            }
+            else {
+                $result[$prefix . $key] = $value;
+            }
+        }
+        return $result;
     }
 
     /**
