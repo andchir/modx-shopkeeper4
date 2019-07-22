@@ -6,11 +6,13 @@
  * @package shopkeeper4
  * @subpackage build
  */
+
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+
 $tstart = explode(' ', microtime());
 $tstart = $tstart[1] + $tstart[0];
 set_time_limit(0);
-
-error_reporting(E_ALL | E_STRICT); ini_set('display_errors',true);
 
 /* define package names */
 define('PKG_NAME', 'shopkeeper4');
@@ -29,8 +31,8 @@ $sources = array(
     'lexicon' => $root . 'core/components/' . PKG_NAME_LOWER . '/lexicon/',
     'docs' => $root . 'core/components/' . PKG_NAME_LOWER . '/docs/',
     'elements' => $root . 'core/components/' . PKG_NAME_LOWER . '/elements/',
-    'source_assets' => $root . 'assets/components/' . PKG_NAME_LOWER,
-    'source_core' => $root . 'core/components/' . PKG_NAME_LOWER,
+    'source_assets' => $root . 'assets/components/' . PKG_NAME_LOWER . '/',
+    'source_core' => $root . 'core/components/' . PKG_NAME_LOWER . '/',
 );
 unset($root);
 
@@ -38,6 +40,7 @@ unset($root);
 // require_once $sources['build'] . 'build.config.php';
 require_once dirname(dirname(dirname(__FILE__))) . '/config.core.php';
 require_once MODX_CORE_PATH . 'model/modx/modx.class.php';
+require_once $sources['build'] . 'functions.php';
 
 $modx = new modX();
 $modx->initialize('mgr');
@@ -59,6 +62,14 @@ $builder->registerNamespace(
 $category = $modx->newObject('modCategory');
 $category->set('id', 1);
 $category->set('category', PKG_NAME);
+
+/* add snippet */
+include $sources['data'] . 'snippets.inc.php';
+$modx->log(modX::LOG_LEVEL_INFO,'Packaged snippets.'); flush();
+
+/* add chunks */
+include $sources['data'].'chunks.inc.php';
+$modx->log(modX::LOG_LEVEL_INFO,'Packaged chunks.'); flush();
 
 /* create category vehicle */
 $attr = array(
