@@ -5,7 +5,7 @@ $settings = [];
 $settings['shopkeeper4.catalog_default_order_by'] = $modx->newObject('modSystemSetting');
 $settings['shopkeeper4.catalog_default_order_by']->fromArray([
     'key' => 'shopkeeper4.catalog_default_order_by',
-    'value' => 'title_desc',
+    'value' => 'title_asc',
     'xtype' => 'textfield',
     'namespace' => 'shopkeeper4',
     'area' => '',
