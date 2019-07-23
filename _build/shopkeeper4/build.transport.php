@@ -63,6 +63,10 @@ $category = $modx->newObject('modCategory');
 $category->set('id', 1);
 $category->set('category', PKG_NAME);
 
+/* add plugins */
+$plugins = include $sources['data'] . 'plugins.inc.php';
+$modx->log(modX::LOG_LEVEL_INFO,'Packaged in ' . count($plugins) . ' plugins.'); flush();
+
 /* add snippet */
 include $sources['data'] . 'snippets.inc.php';
 $modx->log(modX::LOG_LEVEL_INFO,'Packaged snippets.'); flush();
@@ -81,11 +85,34 @@ $attr = array(
         'Snippets' => array(
             xPDOTransport::PRESERVE_KEYS => false,
             xPDOTransport::UPDATE_OBJECT => true,
-            xPDOTransport::UNIQUE_KEY => 'name',
+            xPDOTransport::UNIQUE_KEY => 'name'
         ),
-    ),
+        'Chunks' => array (
+            xPDOTransport::PRESERVE_KEYS => false,
+            xPDOTransport::UPDATE_OBJECT => true,
+            xPDOTransport::UNIQUE_KEY => 'name'
+        ),
+        'TemplateVars' => array (
+            xPDOTransport::PRESERVE_KEYS => false,
+            xPDOTransport::UPDATE_OBJECT => true,
+            xPDOTransport::UNIQUE_KEY => 'name'
+        ),
+        'Plugins' => array (
+            xPDOTransport::PRESERVE_KEYS => false,
+            xPDOTransport::UPDATE_OBJECT => true,
+            xPDOTransport::UNIQUE_KEY => 'name',
+            xPDOTransport::RELATED_OBJECTS => true,
+            xPDOTransport::RELATED_OBJECT_ATTRIBUTES => array (
+                'PluginEvents' => array(
+                    xPDOTransport::PRESERVE_KEYS => true,
+                    xPDOTransport::UPDATE_OBJECT => false,
+                    xPDOTransport::UNIQUE_KEY => array('pluginid','event')
+                )
+            )
+        )
+    )
 );
-$vehicle = $builder->createVehicle($category,$attr);
+$vehicle = $builder->createVehicle($category, $attr);
 
 $modx->log(modX::LOG_LEVEL_INFO,'Adding file resolvers to category...');
 $vehicle->resolve('file',array(
@@ -147,9 +174,10 @@ $builder->setPackageAttributes(array(
 
 /* zip up package */
 $modx->log(modX::LOG_LEVEL_INFO, 'Packing up transport package zip...');
+
 $builder->pack();
 $tend = explode(" ", microtime());
 $tend = $tend[1] + $tend[0];
 $totalTime = sprintf("%2.4f s", ($tend - $tstart));
+
 $modx->log(modX::LOG_LEVEL_INFO, "\nPackage Built.\nExecution time: {$totalTime}\n");
-exit ();
