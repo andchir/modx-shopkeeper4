@@ -189,6 +189,12 @@ class Shopkeeper4 {
                 }
 
                 break;
+            case 'breadcrumbs':
+
+                $this->config['placeholderName'] = 'shk4.dataBreadcrumbs';
+                return $this->getOutput('render_placeholder_array');
+
+                break;
             case 'categories':
                 $output = $this->renderCategories();
                 break;
@@ -1018,6 +1024,7 @@ class Shopkeeper4 {
             'mongodb_database' => 'default',
             'parent' => 0,
             'limit' => 12,
+            'tpl' => '',
             'rowTpl' => 'shk4_menuRowTpl',
             'outerTpl' => 'shk4_menuOuterTpl',
             'totalPlaceholder' => 'products_total',
