@@ -26,7 +26,8 @@ class Shopkeeper4 {
             'jsUrl' => $assetsUrl . 'js/',
             'cssUrl' => $assetsUrl . 'css/',
             'assetsUrl' => $assetsUrl,
-            'connectorUrl' => $assetsUrl . 'connector.php'
+            'connectorUrl' => $assetsUrl . 'connector.php',
+            'parent' => null
         ], $config);
 
         $this->mongodbConnection = \Andchir\Shopkeeper4\Connection\MongoDBConnection::getInstance($this->config['mongodb_url']);
@@ -421,14 +422,6 @@ class Shopkeeper4 {
         $contentType = $this->modx->getPlaceholder('shk4.contentType');
         $contentTypeFields = $contentType ? $contentType->fields : [];
         $queryOptions = $this->modx->getPlaceholder('shk4.queryOptions');
-        $filtersData = $this->getListFilters();
-
-//        $options = [
-//            'currentCategoryUri' => '',
-//            'systemNameField' => '',
-//            'needSortFields' => true
-//        ];
-        //list($filters, $fieldsAll) = $this->getFieldsData($contentTypeFields, $options,'page', $filtersArr, $filtersData, $queryOptions);
 
         $aggregateFields = $this->getAggregationFields(
             self::getOption('locale', $this->config),
@@ -439,7 +432,7 @@ class Shopkeeper4 {
             'isActive' => true
         ];
         $this->applyFilters($queryOptions['filter'], $contentTypeFields, $criteria);
-        $this->applyCategoryFilter($currentCategory, $contentTypeFields, $criteria);
+        $this->applyCategoryFilter($currentCategory, $contentTypeFields, $criteria, $this->config['parent']);
 
         $total = $productsCollection->countDocuments($criteria);
         $this->mongodbConnection->queryCountIncrement();
@@ -499,27 +492,29 @@ class Shopkeeper4 {
      * @param stdClass $currentCategory
      * @param array $contentTypeFields
      * @param array $criteria
+     * @param null $parent
      */
-    public function applyCategoryFilter(stdClass $currentCategory, $contentTypeFields, &$criteria)
+    public function applyCategoryFilter(stdClass $currentCategory, $contentTypeFields, &$criteria, $parent = null)
     {
         $categoriesField = array_filter($contentTypeFields, function($field){
             return $field->inputType == 'categories';
         });
         $categoriesField = current($categoriesField);
+        $parentId = !is_null($parent) ? intval($parent) : $currentCategory->_id;
 
         if (!empty($categoriesField)) {
             $orCriteria = [
                 '$or' => [
-                    ['parentId' => $currentCategory->_id]
+                    ['parentId' => $parentId]
                 ]
             ];
             $orCriteria['$or'][] = ["{$categoriesField->name}" => [
-                '$elemMatch' => ['$in' => [$currentCategory->_id]]
+                '$elemMatch' => ['$in' => [$parentId]]
             ]];
             $criteria = ['$and' => [$criteria, $orCriteria]];
 
         } else {
-            $criteria['parentId'] = $currentCategory->_id;
+            $criteria['parentId'] = $parentId;
         }
     }
 
