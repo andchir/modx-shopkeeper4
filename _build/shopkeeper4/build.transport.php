@@ -123,6 +123,9 @@ $vehicle->resolve('file',array(
     'source' => $sources['source_core'],
     'target' => "return MODX_CORE_PATH . 'components/';",
 ));
+$vehicle->resolve('php',array(
+    'source' => $sources['resolvers'] . 'setupoptions.resolver.php',
+));
 $builder->putVehicle($vehicle);
 
 /* load menu */

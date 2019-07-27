@@ -15,8 +15,9 @@ $scriptProperties['locale'] = $modx->getOption('cultureKey');
 $scriptProperties['localeDefault'] = $modx->getOption('shopkeeper4.locale_default', null, $scriptProperties['locale']);
 $scriptProperties['toPlaceholder'] = Shopkeeper4::getOption('toPlaceholder', $scriptProperties);
 $scriptProperties['action'] = Shopkeeper4::getOption('action', $scriptProperties);
-$actions = $scriptProperties['action'] ? explode(',', $scriptProperties['action']) : [];
-$actions = array_map('trim', $actions);
+$scriptProperties['debug'] = $modx->getOption('debug', $scriptProperties, $modx->getOption('shopkeeper4.debug'));
+
+$actions = Shopkeeper4::stringToArray($scriptProperties['action'] ?? '');
 if (count($actions) > 1) {
     $scriptProperties['toPlaceholder'] = 'shk4.ACTION_NAME';
 }
@@ -50,7 +51,7 @@ foreach ($actions as $action) {
         $shopkeeper4->updateConfig('action', $action);
         $output = $shopkeeper4->getOutput();
         // Cache output
-        if ($cacheKey) {
+        if ($output && $cacheKey) {
             $cached = [
                 'output' => $output
             ];

@@ -473,7 +473,7 @@ class Shopkeeper4 {
     public function getAggregationFields($locale, $localeDefault, $addFieldsOnly = false)
     {
         $contentType = $this->modx->getPlaceholder('shk4.contentType');
-        if (!$contentType || !is_array($contentType)) {
+        if (!$contentType) {
             $this->setErrorMessage('Content type on found.');
             return [];
         }
