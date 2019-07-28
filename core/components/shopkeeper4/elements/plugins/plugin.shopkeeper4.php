@@ -33,7 +33,7 @@ switch($modx->event->name) {
 
     case 'OnHandleRequest':
 
-        $uri = isset($_GET[$request_param_alias]) ? $_GET[$request_param_alias] : '';
+        $uri = Shopkeeper4::getUriString($request_param_alias);
         list($pageAlias, $categoryUri, $levelNum) = Shopkeeper4::parseUri($uri);
         $locale = 'ru';
         $isCategory = substr($uri, -1) === '/';
@@ -58,7 +58,7 @@ switch($modx->event->name) {
         break;
     case 'OnPageNotFound':
 
-        $uri = isset($_GET[$request_param_alias]) ? $_GET[$request_param_alias] : '';
+        $uri = Shopkeeper4::getUriString($request_param_alias);
         list($pageAlias, $categoryUri, $levelNum) = Shopkeeper4::parseUri($uri);
         $locale = 'ru';
         $isCategory = substr($uri, -1) === '/';
@@ -79,7 +79,8 @@ switch($modx->event->name) {
         $contentTypeFields = $contentType ? $contentType->fields : [];
         $catalogNavSettingsDefaults = [
             'pageSizeArr' => Shopkeeper4::stringToArray($modx->getOption('shopkeeper4.catalog_page_size', null, '12,24,60')),
-            'orderBy' => $modx->getOption('shopkeeper4.catalog_default_order_by', null, 'title_asc')
+            'orderBy' => $modx->getOption('shopkeeper4.catalog_default_order_by', null, 'title_asc'),
+            'queryPrefix' => Shopkeeper4::getOption('queryPrefix', $scriptProperties)
         ];
         $queryOptions = Shopkeeper4::getQueryOptions($uri, $contentTypeFields, $catalogNavSettingsDefaults);
         $filtersQueryData = $queryOptions['filter'] ?? [];

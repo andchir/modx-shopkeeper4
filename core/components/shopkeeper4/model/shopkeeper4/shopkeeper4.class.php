@@ -26,8 +26,7 @@ class Shopkeeper4 {
             'jsUrl' => $assetsUrl . 'js/',
             'cssUrl' => $assetsUrl . 'css/',
             'assetsUrl' => $assetsUrl,
-            'connectorUrl' => $assetsUrl . 'connector.php',
-            'parent' => null
+            'connectorUrl' => $assetsUrl . 'connector.php'
         ], $config);
 
         $this->mongodbConnection = \Andchir\Shopkeeper4\Connection\MongoDBConnection::getInstance($this->config['mongodb_url']);
@@ -49,8 +48,11 @@ class Shopkeeper4 {
     public function setErrorMessage($errorMessage, $line = 0)
     {
         $this->isError = true;
+        if ($line) {
+            $errorMessage .= " LINE: {$line}";
+        }
         $this->errorMessage = $errorMessage;
-        $this->modx->log(modX::LOG_LEVEL_ERROR, $errorMessage . ($line ? " LINE: {$line}" : ''));
+        $this->modx->log(modX::LOG_LEVEL_ERROR, $errorMessage);
     }
 
     /**
@@ -92,20 +94,29 @@ class Shopkeeper4 {
 
     /**
      * @param string $categoryUri
+     * @param int|null $categoryId
      * @return array|null|object
      */
-    public function getCategory($categoryUri)
+    public function getCategory($categoryUri = '', $categoryId = null)
     {
         $categoryCollection = $this->getCollection('category');
         if (!$categoryCollection) {
             return null;
         }
         $this->mongodbConnection->queryCountIncrement();
-        return $categoryCollection->findOne([
-            'uri' => $categoryUri
-        ], [
-            'typeMap' => ['array' => 'array']
-        ]);
+        if (!is_null($categoryId)) {
+            return $categoryCollection->findOne([
+                '_id' => $categoryId
+            ], [
+                'typeMap' => ['array' => 'array']
+            ]);
+        } else {
+            return $categoryCollection->findOne([
+                'uri' => $categoryUri
+            ], [
+                'typeMap' => ['array' => 'array']
+            ]);
+        }
     }
 
     /**
@@ -408,31 +419,36 @@ class Shopkeeper4 {
      */
     public function getListProducts()
     {
-        $contentType = $this->modx->getPlaceholder('shk4.contentType');
-        $uri = $this->modx->getPlaceholder('shk4.uri');
+        $parentId = $this->getParentId(false);
+        if (!is_null($parentId)) {
+            $currentCategory = $this->getCategory('', $parentId);
+            $contentType = $this->getContentType($currentCategory);
+        } else {
+            $currentCategory = $this->modx->getPlaceholder('shk4.category');
+            $contentType = $this->modx->getPlaceholder('shk4.contentType');
+        }
         if (!$contentType) {
-            $this->setErrorMessage('Content type on found.');
+            $this->setErrorMessage('Content type on found.', __LINE__);
             return [];
         }
         $productsCollection = $this->getCollection($contentType->collection);
         if (!$productsCollection) {
             return [];
         }
-        $currentCategory = $this->modx->getPlaceholder('shk4.category');
-        $contentType = $this->modx->getPlaceholder('shk4.contentType');
-        $contentTypeFields = $contentType ? $contentType->fields : [];
-        $queryOptions = $this->modx->getPlaceholder('shk4.queryOptions');
+        $contentTypeFields = $contentType->fields;
+        $queryOptions = $this->getQueryOptionsData();
 
         $aggregateFields = $this->getAggregationFields(
             self::getOption('locale', $this->config),
             self::getOption('localeDefault', $this->config),
-            true
+            true,
+            $contentType
         );
         $criteria = [
             'isActive' => true
         ];
         $this->applyFilters($queryOptions['filter'], $contentTypeFields, $criteria);
-        $this->applyCategoryFilter($currentCategory, $contentTypeFields, $criteria, $this->config['parent']);
+        $this->applyCategoryFilter($currentCategory, $contentTypeFields, $criteria, $parentId);
 
         $total = $productsCollection->countDocuments($criteria);
         $this->mongodbConnection->queryCountIncrement();
@@ -461,13 +477,16 @@ class Shopkeeper4 {
      * @param string $locale
      * @param string $localeDefault
      * @param bool $addFieldsOnly
+     * @param null|object $contentType
      * @return array
      */
-    public function getAggregationFields($locale, $localeDefault, $addFieldsOnly = false)
+    public function getAggregationFields($locale, $localeDefault, $addFieldsOnly = false, $contentType = null)
     {
-        $contentType = $this->modx->getPlaceholder('shk4.contentType');
+        if (is_null($contentType)) {
+            $contentType = $this->modx->getPlaceholder('shk4.contentType');
+        }
         if (!$contentType) {
-            $this->setErrorMessage('Content type on found.');
+            $this->setErrorMessage('Content type on found.', __LINE__);
             return [];
         }
         $aggregateFields = [];
@@ -817,11 +836,58 @@ class Shopkeeper4 {
     }
 
     /**
+     * @param bool $useCurrentCategory
+     * @return int|null
+     */
+    public function getParentId($useCurrentCategory = true)
+    {
+        $parentId = self::getOption('parent', $this->config);
+        if (!is_null($parentId)) {
+            $parentId = intval($parentId);
+        } else if ($useCurrentCategory) {
+            $currentCategory = $this->modx->getPlaceholder('shk4.category');
+            if ($currentCategory) {
+                $parentId = $currentCategory->_id;
+            }
+        }
+        return $parentId;
+    }
+
+    /**
      * @return int
      */
     public function getMongoQueryCount()
     {
         return $this->mongodbConnection->getQueryCount();
+    }
+
+    /**
+     * @param bool $useCache
+     * @return array
+     */
+    public function getQueryOptionsData($useCache = true)
+    {
+        if ($useCache && $queryOptions = $this->modx->getPlaceholder('shk4.queryOptions')) {
+            return $queryOptions;
+        }
+        $request_param_alias = $this->modx->getOption('request_param_alias',null,'q');
+        $uri = Shopkeeper4::getUriString($request_param_alias);
+        $catalogNavSettingsDefaults = [
+            'pageSizeArr' => Shopkeeper4::stringToArray($this->modx->getOption('shopkeeper4.catalog_page_size', null, '12,24,60')),
+            'orderBy' => $this->modx->getOption('shopkeeper4.catalog_default_order_by', null, 'title_asc'),
+            'queryPrefix' => self::getOption('queryPrefix', $this->config)
+        ];
+        if ($orderBy = self::getOption('orderBy', $this->config)) {
+            $catalogNavSettingsDefaults['orderBy'] = $orderBy;
+        }
+        if ($limit = self::getOption('limit', $this->config)) {
+            $catalogNavSettingsDefaults['pageSizeArr'] = [$limit];
+        }
+        $queryOptions = self::getQueryOptions($uri, [], $catalogNavSettingsDefaults);
+        if ($useCache) {
+            $this->modx->setPlaceholder('shk4.queryOptions', $queryOptions);
+        }
+        return $queryOptions;
     }
 
     /**
@@ -864,34 +930,38 @@ class Shopkeeper4 {
             'filter' => [],
             'filterStr' => ''
         ];
-
+        $queryPrefix = self::getOption('queryPrefix', $catalogNavSettingsDefaults);
         parse_str($queryString, $queryOptions);
         unset($queryOptions['q']);
 
-        if (!empty($options['pageVar'])) {
-            $queryOptions['page'] = isset($queryOptions[$options['pageVar']])
-                ? $queryOptions[$options['pageVar']]
-                : $queryOptionsDefault['page'];
+        // Apply query prefix
+        if ($queryPrefix) {
+            $queryOptions['limit'] = $queryOptions[$queryPrefix . 'limit'] ?? null;
+            $queryOptions['page'] = $queryOptions[$queryPrefix . 'page'] ?? null;
+            $queryOptions['order_by'] = $queryOptions[$queryPrefix . 'order_by'] ?? null;
+            $queryOptions['filter'] = $queryOptions[$queryPrefix . 'filter'] ?? null;
         }
-        if (!empty($options['limitVar'])) {
-            $queryOptions['limit'] = isset($queryOptions[$options['limitVar']])
-                ? $queryOptions[$options['limitVar']]
-                : $queryOptionsDefault['limit'];
+
+        $queryOptions = array_filter($queryOptions, function ($value) {
+            return $value !== null;
+        });
+        $queryOptions = array_merge($queryOptionsDefault, $queryOptions);
+
+        if (!empty($options['pageVar']) && isset($queryOptions[$queryPrefix . $options['pageVar']])) {
+            $queryOptions['page'] = $queryOptions[$queryPrefix . $options['pageVar']];
+        }
+        if (!empty($options['limitVar']) && isset($queryOptions[$queryPrefix . $options['limitVar']])) {
+            $queryOptions['limit'] = $queryOptions[$queryPrefix . $options['limitVar']];
         }
 
         $queryOptions['uri'] = $currentUri;
 
         // Sorting
-        if (empty($queryOptions['order_by'])) {
-            $queryOptions['order_by'] = $queryOptionsDefault['order_by'];
-        }
-        if (empty($queryOptions['sort_by']) && strpos($queryOptions['order_by'], '_') !== false) {
+        if ($queryOptions['order_by'] && strpos($queryOptions['order_by'], '_') !== false) {
             $pos = strrpos($queryOptions['order_by'], '_');
             $queryOptions['sort_by'] = substr($queryOptions['order_by'], 0, $pos);
             $queryOptions['sort_dir'] = substr($queryOptions['order_by'], $pos + 1);
         }
-
-        $queryOptions = array_merge($queryOptionsDefault, $queryOptions);
 
         //Field names array
         $fieldNames = [];
@@ -938,6 +1008,7 @@ class Shopkeeper4 {
         if (!empty($queryOptions['query']) && !is_array($queryOptions['query'])) {
             $queryOptions['filterStr'] = '&' . http_build_query(['query' => $queryOptions['query']]);
         }
+
         return $queryOptions;
     }
 
@@ -1017,7 +1088,8 @@ class Shopkeeper4 {
             'localeDefault' => 'en',
             'mongodb_url' => 'mongodb://localhost:27017',
             'mongodb_database' => 'default',
-            'parent' => 0,
+            'queryPrefix' => '',
+            'parent' => null,
             'limit' => 12,
             'tpl' => '',
             'rowTpl' => 'shk4_menuRowTpl',
@@ -1113,6 +1185,15 @@ class Shopkeeper4 {
         $uniDelim = $delim[0];
         $output = str_replace($delim, $uniDelim, $input);
         return explode($uniDelim, $output);
+    }
+
+    /**
+     * @param string $request_param_alias
+     * @return string
+     */
+    public static function getUriString($request_param_alias)
+    {
+        return isset($_GET[$request_param_alias]) ? $_GET[$request_param_alias] : '';
     }
 
     /**
