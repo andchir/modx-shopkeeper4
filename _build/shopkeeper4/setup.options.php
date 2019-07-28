@@ -39,9 +39,9 @@ switch ($options[xPDOTransport::PACKAGE_ACTION]) {
         break;
     case xPDOTransport::ACTION_UPGRADE:
 
-        $output .= '<input type="checkbox" name="update_templates" id="shk4_update_templates" value="1" checked="checked">
-<label for="shk4_update_templates">Update Templates</label>
-<br /><br />';
+//        $output .= '<input type="checkbox" name="update_templates" id="shk4_update_templates" value="1" checked="checked">
+//<label for="shk4_update_templates">Update Templates</label>
+//<br /><br />';
 
         break;
     case xPDOTransport::ACTION_UNINSTALL:

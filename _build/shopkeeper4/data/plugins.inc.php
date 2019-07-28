@@ -31,8 +31,8 @@ $plugins[0]->addMany($events);
 
 $properties = [
     'catalogCategoryTemplateId' => '2',
-    'catalogRootTemplateId' => '2',
-    'contentPageTemplateId' => '2'
+    'catalogRootTemplateId' => '3',
+    'contentPageTemplateId' => '4'
 ];
 
 $plugins[0]->setProperties($properties);
