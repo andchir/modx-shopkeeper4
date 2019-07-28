@@ -29,7 +29,11 @@ $events['OnPageNotFound']->fromArray([
 
 $plugins[0]->addMany($events);
 
-$properties = [];
+$properties = [
+    'catalogCategoryTemplateId' => '2',
+    'catalogRootTemplateId' => '2',
+    'contentPageTemplateId' => '2'
+];
 
 $plugins[0]->setProperties($properties);
 unset($events,$properties);

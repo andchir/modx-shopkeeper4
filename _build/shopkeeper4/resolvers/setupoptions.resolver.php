@@ -6,7 +6,10 @@
  * @package shopkeeper4
  * @subpackage build
  */
-$success= false;
+
+/** @var array $options */
+
+$success = false;
 switch ($options[xPDOTransport::PACKAGE_ACTION]) {
     case xPDOTransport::ACTION_INSTALL:
     case xPDOTransport::ACTION_UPGRADE:
@@ -32,10 +35,10 @@ switch ($options[xPDOTransport::PACKAGE_ACTION]) {
                 $setting->save();
             }
         }
-        $success= true;
+        $success = true;
         break;
     case xPDOTransport::ACTION_UNINSTALL:
-        $success= true;
+        $success = true;
         break;
 }
 return $success;

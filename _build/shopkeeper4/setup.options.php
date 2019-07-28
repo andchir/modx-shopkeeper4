@@ -6,6 +6,8 @@
  * @subpackage build
  */
 
+/** @var array $options */
+
 $output = '';
 
 $values = array(

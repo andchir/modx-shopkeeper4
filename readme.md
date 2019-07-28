@@ -8,5 +8,8 @@ Shopkeeper4:
 Official site:
 [https://modx-shopkeeper.ru/](https://modx-shopkeeper.ru/)
 
+MODX CMS:
+[https://modx.com/download](https://modx.com/download)
+
 MongoDB Tutorials:
 [https://docs.mongodb.com/php-library/current/tutorial/](https://docs.mongodb.com/php-library/current/tutorial/)
