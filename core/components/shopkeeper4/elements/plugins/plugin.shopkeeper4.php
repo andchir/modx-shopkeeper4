@@ -7,8 +7,8 @@
 
 if($modx->context->get('key') == 'mgr') return '';
 
-$catalogTemplateId = $modx->getOption('catalogTemplateId', $scriptProperties, 2);
-$catalogRootTemplateId = $modx->getOption('catalogRootTemplateId', $scriptProperties, $catalogTemplateId);
+$catalogCategoryTemplateId = $modx->getOption('catalogCategoryTemplateId', $scriptProperties, 2);
+$catalogRootTemplateId = $modx->getOption('catalogRootTemplateId', $scriptProperties, $catalogCategoryTemplateId);
 $contentPageTemplateId = $modx->getOption('contentPageTemplateId', $scriptProperties, 3);
 
 $properties = [
@@ -68,7 +68,7 @@ switch($modx->event->name) {
             return '';
         }
         if (!$category->parentId) {// Root category
-            $catalogTemplateId = $catalogRootTemplateId;
+            $catalogCategoryTemplateId = $catalogRootTemplateId;
         }
 
         $modx->setPlaceholder('shk4.category', $category);
@@ -100,7 +100,7 @@ switch($modx->event->name) {
 
         $modx->resource = $modx->newObject('modResource');
         $modx->resource->fromArray($pageData);
-        $modx->resource->set('template', $isCategory ? $catalogTemplateId : $contentPageTemplateId);
+        $modx->resource->set('template', $isCategory ? $catalogCategoryTemplateId : $contentPageTemplateId);
         $modx->resource->set('id', $pageData['id']);
         $modx->resource->set('cacheable', false);
         $modx->resource->set('class_key', 'modResource');
