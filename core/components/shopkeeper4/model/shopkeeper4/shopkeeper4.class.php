@@ -397,8 +397,6 @@ class Shopkeeper4 {
     {
         if (isset($this->chunks[$chunkName])) {
             return $this->chunks[$chunkName];
-        } else if ($chunkDefaultName && isset($this->chunks[$chunkDefaultName])) {
-            return $this->chunks[$chunkDefaultName];
         }
         $chunkObj = $this->modx->getObjectGraph('modChunk', ['Source' => []], ['name' => $chunkName]);
         if ($chunkObj) {
@@ -406,11 +404,15 @@ class Shopkeeper4 {
             return $this->chunks[$chunkName];
         }
         if ($chunkDefaultName) {
+            if (isset($this->chunks[$chunkDefaultName])) {
+                return $this->chunks[$chunkDefaultName];
+            }
             $chunkObj = $this->modx->getObjectGraph('modChunk', ['Source' => []], ['name' => $chunkDefaultName]);
             $this->chunks[$chunkDefaultName] = $chunkObj ? $chunkObj->getContent() : '';
             return $this->chunks[$chunkDefaultName];
         }
         $this->chunks[$chunkName] = '';
+        $this->setErrorMessage("Chunk {$chunkName} not found.", __LINE__);
         return $this->chunks[$chunkName];
     }
 
