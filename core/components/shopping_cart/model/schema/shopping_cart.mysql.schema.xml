@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model package="shopping_cart" baseClass="xPDOObject" platform="mysql" defaultEngine="InnoDB" version="1.0">
+    <object class="ShoppingCart" table="shopping_cart" extends="xPDOSimpleObject">
+        <field key="session_id" dbtype="varchar" precision="255" phptype="string" null="false" default=""/>
+        <field key="createdon" dbtype="datetime" phptype="datetime" null="true"/>
+        <field key="createdby" dbtype="int" precision="10" attributes="unsigned" phptype="integer" null="false" default="0" />
+        <field key="editedon" dbtype="datetime" phptype="datetime" null="true"/>
+        <aggregate alias="CreatedBy" class="modUser" local="createdby" foreign="id" cardinality="one" owner="foreign"/>
+    </object>
+</model>
