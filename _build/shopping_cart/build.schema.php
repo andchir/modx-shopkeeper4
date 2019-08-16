@@ -13,7 +13,7 @@ $modx->setLogTarget(XPDO_CLI_MODE ? 'ECHO' : 'HTML');
 $corePath = $modx->getOption('core_path') . 'components/shopping_cart/';
 $sources = [
     'model' => $corePath . 'model/',
-    'schema_file' => $corePath . 'model/schema/shopping_cart.mysql.schema.xml'
+    'schema_file' => $corePath . 'model/schema/shopping_cart_item.mysql.schema.xml'
 ];
 
 $manager= $modx->getManager();
@@ -30,6 +30,6 @@ if (!file_exists($sources['schema_file'])) {
 
 $generator->parseSchema($sources['schema_file'], $sources['model']);
 $modx->addPackage('shopping_cart', $sources['model']);
-$manager->createObjectContainer('ShoppingCart');
+$manager->createObjectContainer('ShoppingCartItem');
 
 $modx->log(modX::LOG_LEVEL_INFO, 'Done!');

@@ -3,6 +3,6 @@
 $xpdo_meta_map = array (
   'xPDOSimpleObject' => 
   array (
-    0 => 'ShoppingCart',
+    0 => 'ShoppingCartItem',
   ),
 );

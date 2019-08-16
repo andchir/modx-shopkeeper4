@@ -8,7 +8,6 @@ $shoppingCart = $modx->getService(
 );
 if (!($shoppingCart instanceof ShoppingCart)) return '';
 
-$cartItems = $modx->getCollection('ShoppingCart');
-$output = count($cartItems);
+$output = $shoppingCart->actionResponse();
 
 return $output;

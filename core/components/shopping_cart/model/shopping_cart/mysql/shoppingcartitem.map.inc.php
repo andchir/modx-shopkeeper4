@@ -1,8 +1,8 @@
 <?php
-$xpdo_meta_map['ShoppingCart']= array (
+$xpdo_meta_map['ShoppingCartItem']= array (
   'package' => 'shopping_cart',
   'version' => '1.0',
-  'table' => 'shopping_cart',
+  'table' => 'shopping_cart_item',
   'extends' => 'xPDOSimpleObject',
   'tableMeta' => 
   array (
