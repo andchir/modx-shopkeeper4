@@ -50,6 +50,7 @@ class ShoppingCart {
                 if (!empty($itemData) && !empty($itemData[0]) && !empty($itemData[0]['title'])) {
                     $itemData = current($itemData);
                     $shoppingCart = $this->getShoppingCart(true);
+                    /** @var xPDOObject[] $shoppingCartContent */
                     $shoppingCartContent = $shoppingCart->getMany('Content');
                     $contentIndex = $this->getContentIndex($shoppingCartContent, $itemData);
                     if ($contentIndex > -1) {
@@ -88,6 +89,7 @@ class ShoppingCart {
                 if (!$shoppingCart) {
                     return '';
                 }
+                /** @var xPDOObject[] $shoppingCartContent */
                 $shoppingCartContent = $shoppingCart->getMany('Content');
                 if (empty($shoppingCartContent)) {
                     return '';
@@ -108,12 +110,13 @@ class ShoppingCart {
 
     /**
      * @param bool $create
-     * @return null|object
+     * @return null|xPDOObject
      */
     public function getShoppingCart($create = false)
     {
         $user = $this->getUser();
         $sessionId = $this->getSessionId();
+        /** @var xPDOObject $shoppingCart */
         $shoppingCart = $this->modx->getObject('ShoppingCartItem', [
             'session_id' => $sessionId
         ]);
@@ -138,6 +141,7 @@ class ShoppingCart {
     public function renderOutput()
     {
         $shoppingCart = $this->getShoppingCart();
+        /** @var xPDOObject[] $shoppingCartContent */
         $shoppingCartContent = $shoppingCart ? $shoppingCart->getMany('Content') : [];
         if (empty($shoppingCartContent)) {
             return $this->modx->getChunk($this->config['emptyTpl']);
@@ -147,16 +151,17 @@ class ShoppingCart {
 
         $output = '';
 
-        $index = 0;
-        foreach ($shoppingCartContent as $content) {
-            $output .= $this->modx->getChunk($this->config['rowTpl'], array_merge($content->toArray(), [
-                'index' => $index,
-                'num' => $index + 1,
-                'priceTotal' => 0
-            ]));
-            $index++;
+        if ($this->config['rowTpl']) {
+            $index = 0;
+            foreach ($shoppingCartContent as $content) {
+                $output .= $this->modx->getChunk($this->config['rowTpl'], array_merge($content->toArray(), [
+                    'index' => $index,
+                    'num' => $index + 1,
+                    'priceTotal' => self::getContentPriceTotal($content)
+                ]));
+                $index++;
+            }
         }
-
         if ($this->config['outerTpl']) {
             $output = $this->modx->getChunk($this->config['outerTpl'], [
                 'wrapper' => $output,
@@ -255,6 +260,27 @@ class ShoppingCart {
         $sessionId = self::generateRandomString(26);
         setcookie(self::SESSION_KEY, $sessionId, time()+$this->config['lifeTime'], '/');
         return $sessionId;
+    }
+
+    /**
+     * @param xPDOObject $shoppingCartContentItem
+     * @return int|float
+     */
+    public static function getContentPriceTotal($shoppingCartContentItem)
+    {
+        if (!$shoppingCartContentItem) {
+            return 0;
+        }
+        $count = $shoppingCartContentItem->get('count');
+        $total = $shoppingCartContentItem->get('price') * $count;
+        $options = [];
+        foreach ($options as $option) {
+            if (!isset($option['price'])) {
+                continue;
+            }
+            $total += $option['price'] * $count;
+        }
+        return $total;
     }
 
     /**
