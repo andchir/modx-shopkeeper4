@@ -12,6 +12,7 @@
     <object class="ShoppingCartContent" table="shopping_cart_content" extends="xPDOSimpleObject">
         <field key="item_id" dbtype="int" precision="10" attributes="unsigned" phptype="integer" null="false" default="0" />
         <field key="title" dbtype="varchar" precision="255" phptype="string" null="false" default=""/>
+        <field key="uri" dbtype="varchar" precision="255" phptype="string" null="false" default=""/>
         <field key="name" dbtype="varchar" precision="255" phptype="string" null="true" default=""/>
         <field key="price" dbtype="float" precision="15" phptype="float" null="true" default="0" />
         <field key="count" dbtype="int" precision="10" phptype="integer" null="true" default="0" />

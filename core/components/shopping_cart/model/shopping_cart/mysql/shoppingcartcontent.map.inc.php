@@ -12,6 +12,7 @@ $xpdo_meta_map['ShoppingCartContent']= array (
   array (
     'item_id' => 0,
     'title' => '',
+    'uri' => '',
     'name' => '',
     'price' => 0.0,
     'count' => 0,
@@ -30,6 +31,14 @@ $xpdo_meta_map['ShoppingCartContent']= array (
       'default' => 0,
     ),
     'title' => 
+    array (
+      'dbtype' => 'varchar',
+      'precision' => '255',
+      'phptype' => 'string',
+      'null' => false,
+      'default' => '',
+    ),
+    'uri' => 
     array (
       'dbtype' => 'varchar',
       'precision' => '255',
