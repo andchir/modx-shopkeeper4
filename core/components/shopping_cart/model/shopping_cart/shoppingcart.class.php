@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * Class ShoppingCart
+ * @author <andchir@gmail.com> Andchir
+ */
 class ShoppingCart {
 
     const EVENT_OnShoppingCartAddProduct = 'OnShoppingCartAddProduct';
@@ -182,8 +186,7 @@ class ShoppingCart {
     {
         $total = 0;
         foreach ($shoppingCartContent as $content) {
-            $total += $content->get('price') * $content->get('count');
-            // TODO: get price from options
+            $total += self::getContentPriceTotal($content);
         }
         return $total;
     }
@@ -273,7 +276,7 @@ class ShoppingCart {
         }
         $count = $shoppingCartContentItem->get('count');
         $total = $shoppingCartContentItem->get('price') * $count;
-        $options = [];
+        $options = $shoppingCartContentItem->get('options') ?: [];
         foreach ($options as $option) {
             if (!isset($option['price'])) {
                 continue;

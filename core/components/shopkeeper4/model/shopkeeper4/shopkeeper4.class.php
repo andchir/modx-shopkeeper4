@@ -3,6 +3,10 @@
 require_once dirname(dirname(__DIR__)) . '/vendor/autoload.php';
 require_once dirname(__DIR__) . '/Connection/MongoDBConnection.php';
 
+/**
+ * Class Shopkeeper4
+ * @author <andchir@gmail.com> Andchir
+ */
 class Shopkeeper4 {
 
     public $modx;
