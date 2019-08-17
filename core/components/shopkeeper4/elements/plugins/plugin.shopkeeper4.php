@@ -90,7 +90,7 @@ switch($modx->event->name) {
         if ($isCategory) {
             $pageData = $category ? json_decode(json_encode($category), true) : [];
         } else {
-            $contentObject = $shopkeeper4->getContent($category->_id, $pageAlias, $contentType->collection);
+            $contentObject = $shopkeeper4->getCatalogItem($category->_id, $contentType->collection, $pageAlias);
             $pageData = $contentObject ? json_decode(json_encode($contentObject), true) : [];
         }
         $pageData['id'] = $pageData['_id'] ?? 0;

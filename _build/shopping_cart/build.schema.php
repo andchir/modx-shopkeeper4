@@ -31,5 +31,6 @@ if (!file_exists($sources['schema_file'])) {
 $generator->parseSchema($sources['schema_file'], $sources['model']);
 $modx->addPackage('shopping_cart', $sources['model']);
 $manager->createObjectContainer('ShoppingCartItem');
+$manager->createObjectContainer('ShoppingCartContent');
 
 $modx->log(modX::LOG_LEVEL_INFO, 'Done!');

@@ -121,15 +121,25 @@ class Shopkeeper4 {
 
     /**
      * @param int $categoryId
-     * @param string $pageAlias
      * @param string $collectionName
+     * @param string $pageAlias
+     * @param int $pageId
      * @return mixed|null
      */
-    public function getContent($categoryId, $pageAlias, $collectionName)
+    public function getCatalogItem($categoryId, $collectionName, $pageAlias = '', $pageId = 0)
     {
         $contentCollection = $this->getCollection($collectionName);
-        if (!$contentCollection) {
+        if (!$contentCollection || (!$pageAlias && !$pageId)) {
             return null;
+        }
+        $where = [
+            'parentId' => (int) $categoryId,
+            'isActive' => true
+        ];
+        if ($pageAlias) {
+            $where['name'] = $pageAlias;
+        } else {
+            $where['_id'] = $pageId;
         }
         $aggregateFields = $this->getAggregationFields(
             self::getOption('locale', $this->config),
@@ -137,11 +147,7 @@ class Shopkeeper4 {
             true
         );
         $pipeline = $this->createAggregatePipeline(
-            [
-                'name' => $pageAlias,
-                'parentId' => (int) $categoryId,
-                'isActive' => true
-            ],
+            $where,
             $aggregateFields,
             1
         );
@@ -425,12 +431,14 @@ class Shopkeeper4 {
         if (!is_null($parentId)) {
             $currentCategory = $this->getCategory('', $parentId);
             $contentType = $this->getContentType($currentCategory);
+            if (!$contentType) {
+                $this->setErrorMessage('Content type not found.', __LINE__);
+            }
         } else {
             $currentCategory = $this->modx->getPlaceholder('shk4.category');
             $contentType = $this->modx->getPlaceholder('shk4.contentType');
         }
         if (!$contentType) {
-            $this->setErrorMessage('Content type on found.', __LINE__);
             return [];
         }
         $productsCollection = $this->getCollection($contentType->collection);
@@ -488,7 +496,7 @@ class Shopkeeper4 {
             $contentType = $this->modx->getPlaceholder('shk4.contentType');
         }
         if (!$contentType) {
-            $this->setErrorMessage('Content type on found.', __LINE__);
+            $this->setErrorMessage('Content type not found.', __LINE__);
             return [];
         }
         $aggregateFields = [];
@@ -905,6 +913,42 @@ class Shopkeeper4 {
     }
 
     /**
+     * @param array|object $contentTypeFields
+     * @param string $chunkName
+     * @param string $defaultValue
+     * @return string
+     */
+    public function getFieldByChunkName($contentTypeFields, $chunkName, $defaultValue = '')
+    {
+        $index = array_search(
+            $chunkName,
+            array_map( function($outputProperties) {
+                return $outputProperties->chunkName ?? '';
+            }, array_column($contentTypeFields, 'outputProperties'))
+        );
+        return $index !== false ? $contentTypeFields[$index]->name : $defaultValue;
+    }
+
+    /**
+     * Get system field name
+     * @param array|object $contentTypeFields
+     * @param string $defaultValue
+     * @return string
+     */
+    public function getSystemNameField($contentTypeFields, $defaultValue = 'name')
+    {
+        $output = $defaultValue;
+        foreach ($contentTypeFields as $contentTypeField) {
+            if (!empty($contentTypeField->inputType)
+                && $contentTypeField->inputType == 'system_name') {
+                $output = $contentTypeField->name;
+                break;
+            }
+        }
+        return $output;
+    }
+
+    /**
      * @param string $currentUri
      * @param array $contentTypeFields
      * @param array $catalogNavSettingsDefaults
@@ -1171,7 +1215,7 @@ class Shopkeeper4 {
             return $chunkContent;
         }
         foreach ($inputArray as $key => $value) {
-            if (!is_array($value)) {
+            if (!is_array($value) && !is_object($value)) {
                 $chunkContent = str_replace($prefix.$key.$suffix, $value, $chunkContent);
             }
         }
