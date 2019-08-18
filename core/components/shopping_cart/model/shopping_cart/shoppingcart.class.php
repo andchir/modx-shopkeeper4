@@ -123,7 +123,7 @@ class ShoppingCart {
         /** @var xPDOObject $shoppingCart */
         if ($id) {
             $shoppingCart = $this->modx->getObject('ShoppingCartItem', (int) $id);
-        } else if ($userId || $sessionId ||  $id) {
+        } else if ($userId || $sessionId || $id) {
             $query = $this->modx->newQuery('ShoppingCartItem');
             if ($userId && $sessionId) {
                 $query->where([
