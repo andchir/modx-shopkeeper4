@@ -123,19 +123,24 @@ class ShoppingCart {
         /** @var xPDOObject $shoppingCart */
         if ($id) {
             $shoppingCart = $this->modx->getObject('ShoppingCartItem', (int) $id);
-        } else {
-            $where = [];
+        } else if ($userId || $sessionId ||  $id) {
+            $query = $this->modx->newQuery('ShoppingCartItem');
             if ($userId && $sessionId) {
-                $where['createdby'] = $userId;
-                $where['OR:session_id'] = $sessionId;
+                $query->where([
+                    [
+                        'createdby' => $userId,
+                        'OR:session_id:=' => $sessionId
+                    ]
+                ]);
             } else if ($userId) {
-                $where['createdby'] = $userId;
+                $query->where(['createdby' => $userId]);
             } else if ($sessionId) {
-                $where['session_id'] = $sessionId;
+                $query->where(['session_id' => $sessionId]);
             }
-            $shoppingCart = !empty($where)
-                ? $this->modx->getObject('ShoppingCartItem', array_merge($where, ['type' => $this->config['contentType']]))
-                : null;
+            $query->andCondition(['type' => $this->config['contentType']]);
+            $shoppingCart = $this->modx->getObject('ShoppingCartItem', $query);
+        } else {
+            return null;
         }
         if (!$shoppingCart && $create) {
             $user = $this->getUser();
