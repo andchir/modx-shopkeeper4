@@ -14,9 +14,8 @@ class ShoppingCart {
 
     public function __construct(modX &$modx, array $config = []) {
         $this->modx =& $modx;
-        $basePath = $this->modx->getOption('shopping_cart.core_path', $config,$this->modx->getOption('core_path') . 'components/shopping_cart/');
+        $basePath = $this->modx->getOption('shopping_cart.core_path', $config, $this->modx->getOption('core_path') . 'components/shopping_cart/');
         $assetsUrl = $this->modx->getOption('shopping_cart.assets_url', $config,$this->modx->getOption('assets_url') . 'components/shopping_cart/');
-        $lifeTime = (int) $this->modx->getOption('shopping_cart.lifetime', null, 172800);
         $this->config = array_merge([
             'basePath' => $basePath,
             'corePath' => $basePath,
@@ -28,7 +27,7 @@ class ShoppingCart {
             'cssUrl' => $assetsUrl . 'css/',
             'assetsUrl' => $assetsUrl,
             'connectorUrl' => $assetsUrl . 'connector.php',
-            'lifeTime' => $lifeTime,
+            'lifeTime' => 172800,// 48 hours
             'currency' => 'USD',
             'rowTpl' => 'shoppingCart_rowTpl',
             'outerTpl' => 'shoppingCart_outerTpl',
@@ -92,7 +91,7 @@ class ShoppingCart {
                 break;
             case 'update':
 
-
+                $this->updateAction();
 
                 if (!empty($_SERVER['HTTP_REFERER'])) {
                     $this->modx->sendRedirect($_SERVER['HTTP_REFERER']);
@@ -147,6 +146,9 @@ class ShoppingCart {
                 'currency' => $this->config['currency'],
                 'type' => $this->config['contentType']
             ]);
+            if ($this->config['lifeTime']) {
+                $shoppingCart->set('expireson', strftime('%Y-%m-%d %H:%M:%S', time() + $this->config['lifeTime']));
+            }
             if ($user) {
                 $shoppingCart->addOne($user);
             }
@@ -195,6 +197,31 @@ class ShoppingCart {
     /**
      * @return bool
      */
+    public function updateAction()
+    {
+        if (empty($_POST['count'])) {
+            return false;
+        }
+        $shoppingCart = $this->getShoppingCart($this->getUserId(), $this->getSessionId());
+        if (!$shoppingCart) {
+            return false;
+        }
+        $index = 0;
+        /** @var xPDOObject[] $shoppingCartContent */
+        $shoppingCartContent = $shoppingCart->getMany('Content');
+        foreach ($shoppingCartContent as $content) {
+            if (isset($_POST['count'][$index]) && is_numeric($_POST['count'][$index])) {
+                $content->set('count', max(1, intval($_POST['count'][$index])));
+                $content->save();
+            }
+            $index++;
+        }
+        return true;
+    }
+
+    /**
+     * @return bool
+     */
     public function clean()
     {
         $shoppingCart = $this->getShoppingCart($this->getUserId(), $this->getSessionId());
@@ -222,6 +249,9 @@ class ShoppingCart {
         }
         /** @var xPDOObject[] $shoppingCartContent */
         $shoppingCartContent = $shoppingCart->getMany('Content');
+        if (count($shoppingCartContent) <= 1 && $index === 0) {
+            return $this->clean();
+        }
         if (empty($shoppingCartContent)) {
             return false;
         }
