@@ -3,9 +3,11 @@
     <object class="ShoppingCartItem" table="shopping_cart_item" extends="xPDOSimpleObject">
         <field key="session_id" dbtype="varchar" precision="128" phptype="string" null="true" default=""/>
         <field key="currency" dbtype="varchar" precision="64" phptype="string" null="false" default=""/>
-        <field key="createdon" dbtype="datetime" phptype="datetime" null="true"/>
+        <field key="type" dbtype="varchar" precision="64" phptype="string" null="true" default=""/>
         <field key="createdby" dbtype="int" precision="10" attributes="unsigned" phptype="integer" null="true" default="" />
+        <field key="createdon" dbtype="datetime" phptype="datetime" null="true"/>
         <field key="editedon" dbtype="datetime" phptype="datetime" null="true"/>
+        <field key="expireson" dbtype="datetime" phptype="datetime" null="true"/>
         <aggregate alias="Owner" class="modUser" local="createdby" foreign="id" cardinality="one" owner="foreign"/>
         <composite alias="Content" class="ShoppingCartContent" local="id" foreign="shoppingcart_id" cardinality="many" owner="local" />
     </object>
@@ -18,11 +20,9 @@
         <field key="count" dbtype="int" precision="10" phptype="integer" null="true" default="0" />
         <field key="options" dbtype="text" phptype="array" null="true" default=""/>
         <field key="shoppingcart_id" dbtype="int" precision="10" attributes="unsigned" phptype="integer" null="false" default="0" index="index" />
-
         <index alias="shoppingcart_id" name="shoppingcart_id" primary="false" unique="true" type="BTREE">
             <column key="shoppingcart_id" length="" collation="A" null="false" />
         </index>
-
         <aggregate alias="ShoppingCart" class="ShoppingCartItem" local="shoppingcart_id" foreign="id" cardinality="one" owner="foreign"/>
     </object>
 </model>

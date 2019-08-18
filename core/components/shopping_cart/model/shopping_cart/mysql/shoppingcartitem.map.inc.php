@@ -12,9 +12,11 @@ $xpdo_meta_map['ShoppingCartItem']= array (
   array (
     'session_id' => '',
     'currency' => '',
-    'createdon' => NULL,
+    'type' => '',
     'createdby' => 0,
+    'createdon' => NULL,
     'editedon' => NULL,
+    'expireson' => NULL,
   ),
   'fieldMeta' => 
   array (
@@ -34,11 +36,13 @@ $xpdo_meta_map['ShoppingCartItem']= array (
       'null' => false,
       'default' => '',
     ),
-    'createdon' => 
+    'type' => 
     array (
-      'dbtype' => 'datetime',
-      'phptype' => 'datetime',
+      'dbtype' => 'varchar',
+      'precision' => '64',
+      'phptype' => 'string',
       'null' => true,
+      'default' => '',
     ),
     'createdby' => 
     array (
@@ -49,7 +53,19 @@ $xpdo_meta_map['ShoppingCartItem']= array (
       'null' => true,
       'default' => 0,
     ),
+    'createdon' => 
+    array (
+      'dbtype' => 'datetime',
+      'phptype' => 'datetime',
+      'null' => true,
+    ),
     'editedon' => 
+    array (
+      'dbtype' => 'datetime',
+      'phptype' => 'datetime',
+      'null' => true,
+    ),
+    'expireson' => 
     array (
       'dbtype' => 'datetime',
       'phptype' => 'datetime',

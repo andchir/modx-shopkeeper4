@@ -13,7 +13,6 @@ class ShoppingCart {
     public $config = array();
 
     public function __construct(modX &$modx, array $config = []) {
-
         $this->modx =& $modx;
         $basePath = $this->modx->getOption('shopping_cart.core_path', $config,$this->modx->getOption('core_path') . 'components/shopping_cart/');
         $assetsUrl = $this->modx->getOption('shopping_cart.assets_url', $config,$this->modx->getOption('assets_url') . 'components/shopping_cart/');
@@ -34,10 +33,22 @@ class ShoppingCart {
             'rowTpl' => 'shoppingCart_rowTpl',
             'outerTpl' => 'shoppingCart_outerTpl',
             'emptyTpl' => 'shoppingCart_emptyTpl',
-            'action' => ''
+            'action' => '',
+            'contentType' => ''
         ], $config);
 
         $this->modx->addPackage('shopping_cart', $this->config['modelPath']);
+    }
+
+    /**
+     * @param array $config
+     */
+    public function updateConfig($config)
+    {
+        if (!is_array($config)) {
+            return;
+        }
+        $this->config = array_merge($this->config, $config);
     }
 
     /**
@@ -50,31 +61,7 @@ class ShoppingCart {
         switch ($action) {
             case 'add_to_cart':
 
-                $itemData = $this->modx->invokeEvent( self::EVENT_OnShoppingCartAddProduct, ['data' => $_POST]);
-                if (!empty($itemData) && !empty($itemData[0]) && !empty($itemData[0]['title'])) {
-                    $itemData = current($itemData);
-                    $shoppingCart = $this->getShoppingCart(true);
-                    /** @var xPDOObject[] $shoppingCartContent */
-                    $shoppingCartContent = $shoppingCart->getMany('Content');
-                    $contentIndex = $this->getContentIndex($shoppingCartContent, $itemData);
-                    if ($contentIndex > -1) {
-                        $count = $shoppingCartContent[$contentIndex]->get('count');
-                        $shoppingCartContent[$contentIndex]->set('count', $count + $itemData['count']);
-                    } else {
-                        $shoppingCartContent[] = $this->modx->newObject('ShoppingCartContent', [
-                            'item_id' => $itemData['id'] ?? 0,
-                            'title' => $itemData['title'],
-                            'name' => $itemData['name'] ?? '',
-                            'price' => $itemData['price'] ?? 0,
-                            'count' => $itemData['count'] ?? 1,
-                            'uri' => $itemData['uri'] ?? '',
-                            'options' => $itemData['options'] ?? []
-                        ]);
-                    }
-                    $shoppingCart->set('editedon', strftime('%Y-%m-%d %H:%M:%S'));
-                    $shoppingCart->addMany($shoppingCartContent);
-                    $shoppingCart->save();
-                }
+                $this->addToCartAction();
 
                 if (!empty($_SERVER['HTTP_REFERER'])) {
                     $this->modx->sendRedirect($_SERVER['HTTP_REFERER']);
@@ -88,20 +75,33 @@ class ShoppingCart {
                 break;
             case 'remove':
 
-                $index = isset($_REQUEST['index']) ? intval($_REQUEST['index']) : 0;
-                $shoppingCart = $this->getShoppingCart();
-                if (!$shoppingCart) {
-                    return '';
+                $index = isset($_REQUEST['index']) ? (int) $_REQUEST['index'] : null;
+                if (is_null($index) && isset($_POST['remove_by_index'])) {
+                    $index = (int) $_POST['remove_by_index'];
                 }
-                /** @var xPDOObject[] $shoppingCartContent */
-                $shoppingCartContent = $shoppingCart->getMany('Content');
-                if (empty($shoppingCartContent)) {
-                    return '';
+                if (is_null($index)) {
+                    $this->modx->log(modX::LOG_LEVEL_ERROR, 'Product index not specified.');
+                    break;
                 }
-                $shoppingCartContent = array_merge($shoppingCartContent);
-                if (isset($shoppingCartContent[$index])) {
-                    $shoppingCartContent[$index]->remove();
+                $this->removeByIndex($index);
+
+                if (!empty($_SERVER['HTTP_REFERER'])) {
+                    $this->modx->sendRedirect($_SERVER['HTTP_REFERER']);
                 }
+
+                break;
+            case 'update':
+
+
+
+                if (!empty($_SERVER['HTTP_REFERER'])) {
+                    $this->modx->sendRedirect($_SERVER['HTTP_REFERER']);
+                }
+
+                break;
+            case 'clean':
+
+                $this->clean();
 
                 if (!empty($_SERVER['HTTP_REFERER'])) {
                     $this->modx->sendRedirect($_SERVER['HTTP_REFERER']);
@@ -113,23 +113,39 @@ class ShoppingCart {
     }
 
     /**
+     * @param null|int $userId
+     * @param null|string $sessionId
+     * @param null|int $id
      * @param bool $create
      * @return null|xPDOObject
      */
-    public function getShoppingCart($create = false)
+    public function getShoppingCart($userId = null, $sessionId = null, $id = null, $create = false)
     {
-        $user = $this->getUser();
-        $sessionId = $this->getSessionId();
         /** @var xPDOObject $shoppingCart */
-        $shoppingCart = $this->modx->getObject('ShoppingCartItem', [
-            'session_id' => $sessionId
-        ]);
+        if ($id) {
+            $shoppingCart = $this->modx->getObject('ShoppingCartItem', (int) $id);
+        } else {
+            $where = [];
+            if ($userId && $sessionId) {
+                $where['createdby'] = $userId;
+                $where['OR:session_id'] = $sessionId;
+            } else if ($userId) {
+                $where['createdby'] = $userId;
+            } else if ($sessionId) {
+                $where['session_id'] = $sessionId;
+            }
+            $shoppingCart = !empty($where)
+                ? $this->modx->getObject('ShoppingCartItem', array_merge($where, ['type' => $this->config['contentType']]))
+                : null;
+        }
         if (!$shoppingCart && $create) {
+            $user = $this->getUser();
             $shoppingCart = $this->modx->newObject('ShoppingCartItem', [
                 'session_id' => $sessionId,
                 'createdon' => strftime('%Y-%m-%d %H:%M:%S'),
                 'editedon' => strftime('%Y-%m-%d %H:%M:%S'),
-                'currency' => $this->config['currency']
+                'currency' => $this->config['currency'],
+                'type' => $this->config['contentType']
             ]);
             if ($user) {
                 $shoppingCart->addOne($user);
@@ -140,15 +156,94 @@ class ShoppingCart {
     }
 
     /**
+     * @return bool
+     */
+    public function addToCartAction()
+    {
+        $itemData = $this->modx->invokeEvent( self::EVENT_OnShoppingCartAddProduct, ['data' => $_POST]);
+        if (empty($itemData)
+            || empty($itemData[0])
+            || empty($itemData[0]['title'])) {
+                return false;
+        }
+        $itemData = current($itemData);
+        $shoppingCart = $this->getShoppingCart($this->getUserId(), $this->getSessionId(), null, true);
+        /** @var xPDOObject[] $shoppingCartContent */
+        $shoppingCartContent = $shoppingCart->getMany('Content');
+        $contentIndex = $this->getContentIndex($shoppingCartContent, $itemData);
+        if ($contentIndex > -1) {
+            $count = $shoppingCartContent[$contentIndex]->get('count');
+            $shoppingCartContent[$contentIndex]->set('count', $count + $itemData['count']);
+        } else {
+            $shoppingCartContent[] = $this->modx->newObject('ShoppingCartContent', [
+                'item_id' => $itemData['id'] ?? 0,
+                'title' => $itemData['title'],
+                'name' => $itemData['name'] ?? '',
+                'price' => $itemData['price'] ?? 0,
+                'count' => $itemData['count'] ?? 1,
+                'uri' => $itemData['uri'] ?? '',
+                'options' => $itemData['options'] ?? []
+            ]);
+        }
+        $shoppingCart->set('editedon', strftime('%Y-%m-%d %H:%M:%S'));
+        $shoppingCart->addMany($shoppingCartContent);
+        $shoppingCart->save();
+
+        return true;
+    }
+
+    /**
+     * @return bool
+     */
+    public function clean()
+    {
+        $shoppingCart = $this->getShoppingCart($this->getUserId(), $this->getSessionId());
+        if (!$shoppingCart) {
+            return false;
+        }
+        /** @var xPDOObject[] $shoppingCartContent */
+        $shoppingCartContent = $shoppingCart->getMany('Content');
+        foreach ($shoppingCartContent as $content) {
+            $content->remove();
+        }
+        $shoppingCart->remove();
+        return true;
+    }
+
+    /**
+     * @param int $index
+     * @return bool
+     */
+    public function removeByIndex($index)
+    {
+        $shoppingCart = $this->getShoppingCart($this->getUserId(), $this->getSessionId());
+        if (!$shoppingCart) {
+            return false;
+        }
+        /** @var xPDOObject[] $shoppingCartContent */
+        $shoppingCartContent = $shoppingCart->getMany('Content');
+        if (empty($shoppingCartContent)) {
+            return false;
+        }
+        $shoppingCartContent = array_merge($shoppingCartContent);
+        if (isset($shoppingCartContent[$index])) {
+            $shoppingCartContent[$index]->remove();
+        }
+        return true;
+    }
+
+    /**
      * @return string
      */
     public function renderOutput()
     {
-        $shoppingCart = $this->getShoppingCart();
+        $shoppingCart = $this->getShoppingCart($this->getUserId(), $this->getSessionId());
         /** @var xPDOObject[] $shoppingCartContent */
         $shoppingCartContent = $shoppingCart ? $shoppingCart->getMany('Content') : [];
         if (empty($shoppingCartContent)) {
-            return $this->modx->getChunk($this->config['emptyTpl']);
+            return $this->config['emptyTpl']
+                ? $this->modx->getChunk($this->config['emptyTpl'])
+                : '';
         }
         $priceTotal = $this->getTotalPrice($shoppingCartContent);
         $countTotal = $this->getTotalCount($shoppingCartContent);
@@ -231,6 +326,9 @@ class ShoppingCart {
         $action = $this->config['action'];
         if (!empty($_POST['item_id'])) {
             $action = 'add_to_cart';
+        }
+        if (isset($_POST['remove_by_index'])) {
+            $action = 'remove';
         }
         return $action;
     }
