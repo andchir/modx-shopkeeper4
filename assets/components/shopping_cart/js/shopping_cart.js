@@ -63,25 +63,23 @@
                 if (console && console.log) {
                     console.log('[ShoppingCart] Shopping Cart form element not found.');
                 }
+                return;
             }
             formEl.addEventListener('submit', function(event) {
                 event.preventDefault();
-
-                console.log('SUBMIT', actionName, actionValue);
 
                 var formData = new FormData(formEl);
                 formData.append(actionName, actionValue);
                 formData.append('propertySetName', mainOptions.snippetPropertySetName);
 
-                console.log(mainOptions.baseUrl + mainOptions.connectorUrl);
-
                 self.ajax(mainOptions.baseUrl + mainOptions.connectorUrl, formData, function(response) {
-
-                    console.log(response);
-
+                    if (!response.success) {
+                        return;
+                    }
+                    self.containerUpdate(response.html);
                 }, function(response) {
 
-                    console.log(response);
+                    //console.log(response);
 
                 }, 'POST');
 
@@ -92,6 +90,16 @@
                     actionValue = buttonEl.value;
                 });
             });
+        };
+
+        /**
+         * Replace content of container element
+         * @param html
+         */
+        this.containerUpdate = function(html) {
+            container.outerHTML = html;
+            container = document.querySelector(mainOptions.selector);
+            this.submitFormInit();
         };
 
         /**
@@ -132,9 +140,6 @@
             if (!(data instanceof FormData)) {
                 request.setRequestHeader('Content-type', 'application/json; charset=utf-8');
             }
-
-            console.log(url, request);
-
             if (method === 'POST') {
                 request.send(data);
             } else {
