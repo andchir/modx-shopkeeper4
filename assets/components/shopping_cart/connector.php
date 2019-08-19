@@ -38,7 +38,7 @@ if ($snippet && $propertySetName != 'default') {
 $shopCart = new ShoppingCart($modx, $properties);
 $response = $shopCart->actionResponse(true);
 
-if (!$response || !$response['result'] || $shopCart->getIsError()) {
+if ($shopCart->getIsError()) {
     http_response_code(422);
     $output = [
         'success' => false,
