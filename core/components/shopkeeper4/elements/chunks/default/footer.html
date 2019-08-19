@@ -2,7 +2,7 @@
     <div class="container">
         <div class="float-right p-2">
             <a href="http://modx-shopkeeper.ru/" target="_blank">
-                <img src="/assets/components/shopkeeper4/img/shk-logo-small-gray.png" width="120" alt="Shopkeeper 4">
+                <img src="[[++base_url]]assets/components/shopkeeper4/img/shk-logo-small-gray.png" width="120" alt="Shopkeeper 4">
             </a>
         </div>
         <div class="py-3 text-muted">
@@ -29,4 +29,12 @@
 &emptyTpl=``
 ]]
 
-<script src="/assets/components/shopkeeper4/app_build/app.js"></script>
+<script src="[[++base_url]]assets/components/shopkeeper4/app_build/app.js"></script>
+<script src="[[++base_url]]assets/components/shopping_cart/js/shopping_cart.js"></script>
+<script>
+    var shoppingCart = new ShoppingCart({
+        baseUrl: '[[++base_url]]',
+        snippetPropertySetName: 'shoppingCartFull',
+        selector: '#shoppingCartContainer'
+    });
+</script>

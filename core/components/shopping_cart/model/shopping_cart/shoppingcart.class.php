@@ -2,7 +2,7 @@
 
 /**
  * Class ShoppingCart
- * @author <andchir@gmail.com> Andchir
+ * @author Andchir<andchir@gmail.com>
  */
 class ShoppingCart {
 
@@ -11,6 +11,8 @@ class ShoppingCart {
 
     public $modx;
     public $config = array();
+    private $errorMessage = null;
+    private $isError = false;
 
     public function __construct(modX &$modx, array $config = []) {
         $this->modx =& $modx;
@@ -27,6 +29,7 @@ class ShoppingCart {
             'cssUrl' => $assetsUrl . 'css/',
             'assetsUrl' => $assetsUrl,
             'connectorUrl' => $assetsUrl . 'connector.php',
+            'debug' => false,
             'lifeTime' => 172800,// 48 hours
             'currency' => 'USD',
             'rowTpl' => 'shoppingCart_rowTpl',
@@ -51,18 +54,49 @@ class ShoppingCart {
     }
 
     /**
-     * @return string
+     * @param string $errorMessage
+     * @param int $line
      */
-    public function actionResponse()
+    public function setErrorMessage($errorMessage, $line = 0)
+    {
+        $this->isError = true;
+        if ($line) {
+            $errorMessage .= " LINE: {$line}";
+        }
+        $this->errorMessage = $errorMessage;
+        $this->modx->log(modX::LOG_LEVEL_ERROR, $errorMessage);
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getErrorMessage()
+    {
+        return $this->errorMessage;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsError()
+    {
+        return $this->isError;
+    }
+
+    /**
+     * @param bool $returnArray
+     * @return string|array
+     */
+    public function actionResponse($returnArray = false)
     {
         $output = '';
         $action = $this->getActionName();
         switch ($action) {
             case 'add_to_cart':
 
-                $this->addToCartAction();
+                $output = $this->addToCartAction();
 
-                if (!empty($_SERVER['HTTP_REFERER'])) {
+                if (!empty($_SERVER['HTTP_REFERER']) && !$returnArray) {
                     $this->modx->sendRedirect($_SERVER['HTTP_REFERER']);
                 }
 
@@ -82,18 +116,18 @@ class ShoppingCart {
                     $this->modx->log(modX::LOG_LEVEL_ERROR, 'Product index not specified.');
                     break;
                 }
-                $this->removeByIndex($index);
+                $output = $this->removeByIndex($index);
 
-                if (!empty($_SERVER['HTTP_REFERER'])) {
+                if (!empty($_SERVER['HTTP_REFERER']) && !$returnArray) {
                     $this->modx->sendRedirect($_SERVER['HTTP_REFERER']);
                 }
 
                 break;
             case 'update':
 
-                $this->updateAction();
+                $output = $this->updateAction();
 
-                if (!empty($_SERVER['HTTP_REFERER'])) {
+                if (!empty($_SERVER['HTTP_REFERER']) && !$returnArray) {
                     $this->modx->sendRedirect($_SERVER['HTTP_REFERER']);
                 }
 
@@ -102,13 +136,18 @@ class ShoppingCart {
 
                 $this->clean();
 
-                if (!empty($_SERVER['HTTP_REFERER'])) {
+                if (!empty($_SERVER['HTTP_REFERER']) && !$returnArray) {
                     $this->modx->sendRedirect($_SERVER['HTTP_REFERER']);
                 }
 
                 break;
         }
-        return $output;
+        if ($this->config['debug'] && $this->getIsError()) {
+            return sprintf('<div style="padding:5px 10px; background-color:#f4c8b3; color:#a72323;">ERROR: %s</div>', $this->getErrorMessage());
+        }
+        return $returnArray ? [
+            'result' => $output
+        ] : $output;
     }
 
     /**
@@ -293,6 +332,10 @@ class ShoppingCart {
                     'num' => $index + 1,
                     'priceTotal' => self::getContentPriceTotal($content)
                 ]));
+                if (!$output) {
+                    $this->setErrorMessage("Chunk \"{$this->config['rowTpl']}\" not found.", __LINE__);
+                    break;
+                }
                 $index++;
             }
         }
@@ -303,6 +346,9 @@ class ShoppingCart {
                 'countTotal' => $countTotal,
                 'currency' => $shoppingCart->get('currency')
             ]);
+            if (!$output) {
+                $this->setErrorMessage("Chunk \"{$this->config['outerTpl']}\" not found.", __LINE__);
+            }
         }
 
         return $output;
@@ -327,6 +373,9 @@ class ShoppingCart {
      */
     public function getTotalCount($shoppingCartContent)
     {
+        if (empty($shoppingCartContent)) {
+            return 0;
+        }
         $countArr = array_column($shoppingCartContent, 'count');
         return array_sum($countArr);
     }

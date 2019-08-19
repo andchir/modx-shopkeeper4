@@ -5,7 +5,7 @@ require_once dirname(__DIR__) . '/Connection/MongoDBConnection.php';
 
 /**
  * Class Shopkeeper4
- * @author <andchir@gmail.com> Andchir
+ * @author Andchir<andchir@gmail.com>
  */
 class Shopkeeper4 {
 
