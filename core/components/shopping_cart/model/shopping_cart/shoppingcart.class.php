@@ -202,6 +202,16 @@ class ShoppingCart {
     }
 
     /**
+     * @return xPDOObject[]
+     */
+    public function getShoppingCartsBySession()
+    {
+        return $this->modx->getCollection('ShoppingCartItem', [
+            'session_id' => $this->getSessionId()
+        ]);
+    }
+
+    /**
      * @return bool
      */
     public function addToCartAction()

@@ -4,11 +4,12 @@
             <div class="container">
                 <div class="float-md-left">
                     Выбрано товаров:
-                    <span class="badge badge-pill badge-light big mx-2">
+                    <span class="badge badge-pill badge-light big mx-2 shopping-cart-count-total">
                         [[+countTotal]]
                     </span>
-                    [[+countTotal:units=`товар|товара|товаров`]] на сумму
-                    <span class="badge badge-light big mx-2 shk-price">[[+priceTotal:numFormat]]</span>
+                    <span class="shopping-cart-declension" data-value="товар|товара|товаров">[[+countTotal:units=`товар|товара|товаров`]]</span>
+                    на сумму
+                    <span class="badge badge-light big mx-2 shk-price shopping-cart-price-total">[[+priceTotal:numFormat]]</span>
                     <span class="shk-currency">[[+currency]]</span>
                 </div>
                 <div class="float-md-right mt-3 mt-md-0">

@@ -34,7 +34,12 @@
             baseUrl: '/',
             connectorUrl: 'assets/components/shopping_cart/connector.php',
             snippetPropertySetName: '',
-            selector: '#shoppingCartContainer'
+            selector: '#shoppingCartContainer',
+            useNumberFormat: true,
+            selectorPriceTotal: '.shopping-cart-price-total',
+            selectorCountTotal: '.shopping-cart-count-total',
+            selectorCountUniqueTotal: '.shopping-cart-count-unique-total',
+            selectorDeclension: '.shopping-cart-declension'
         };
 
         /**
@@ -53,9 +58,16 @@
                 return;
             }
             this.submitFormInit();
+            isInitialized = true;
         };
 
+        /**
+         * Submit shopping cart form initialize
+         */
         this.submitFormInit = function() {
+            if (!container) {
+                return;
+            }
             var formEl = container.querySelector('form'),
                 actionName = '',
                 actionValue = '';
@@ -72,15 +84,16 @@
                 formData.append(actionName, actionValue);
                 formData.append('propertySetName', mainOptions.snippetPropertySetName);
 
+                self.showLoading(true);
                 self.ajax(mainOptions.baseUrl + mainOptions.connectorUrl, formData, function(response) {
                     if (!response.success) {
+                        self.showLoading(false);
                         return;
                     }
+                    self.updateElementsBySelectors(response);
                     self.containerUpdate(response.html);
                 }, function(response) {
-
-                    //console.log(response);
-
+                    self.showLoading(false);
                 }, 'POST');
 
             });
@@ -100,6 +113,30 @@
             container.outerHTML = html;
             container = document.querySelector(mainOptions.selector);
             this.submitFormInit();
+        };
+
+        /**
+         * Update the contents of elements with data of the shopping cart
+         * @param data
+         */
+        this.updateElementsBySelectors = function(data) {
+            if (!data || !data.price_total || !data.items_total) {
+                return;
+            }
+            var elementsTotalPrice = document.querySelectorAll(mainOptions.selectorPriceTotal),
+                elementsCountTotal = document.querySelectorAll(mainOptions.selectorCountTotal),
+                elementsCountUniqueTotal = document.querySelectorAll(mainOptions.selectorCountUniqueTotal),
+                elementsDeclension = document.querySelectorAll(mainOptions.selectorDeclension);
+
+            elementsTotalPrice.forEach(function (el) {
+                el.textContent = mainOptions.useNumberFormat ? self.numFormat(data.price_total) : data.price_total;
+            });
+            elementsCountTotal.forEach(function (el) {
+                el.textContent = data.items_total;
+            });
+            elementsCountUniqueTotal.forEach(function (el) {
+                el.textContent = data.items_unique_total;
+            });
         };
 
         /**
@@ -145,6 +182,23 @@
             } else {
                 request.send();
             }
+        };
+
+        /**
+         * Show loading animation
+         * @param show
+         */
+        this.showLoading = function(show) {
+            if (!container) {
+                return;
+            }
+            show = show || false;
+            if (show) {
+                container.classList.add('shopping-cart-loading');
+            } else {
+                //container.classList.remove('shopping-cart-loading');
+            }
+            console.log('showLoading', show);
         };
 
         /**
