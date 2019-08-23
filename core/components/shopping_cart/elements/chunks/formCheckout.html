@@ -1,5 +1,5 @@
 [[!FormIt?
-&hooks=`spam,email,FormItAutoResponder,FormItSaveForm,redirect`
+&hooks=`spam,shoppingCart,email,FormItAutoResponder,FormItSaveForm,redirect`
 &submitVar=`action_order`
 &emailTpl=`shoppingCart_orderReport`
 &fiarTpl=`shoppingCart_orderReport`
@@ -8,11 +8,11 @@
 &emailTo=`[[++emailsender]]`
 &fiarReplyTo=`[[++emailsender]]`
 &fiarToField=`email`
-&redirectTo=`8`
+&redirectTo=`9`
 &validate=`address:required,fullname:required,email:email:required,phone:required,delivery:required,payment:required`
 &errTpl=`<span class="error">[[+error]]</span>`
-&formFields=`fullname,address,phone,email,delivery,payment,comment`
-&fieldNames=``
+&formFields=`fullname,address,phone,email,delivery,payment,message`
+&fieldNames=`fullname==Ф.И.О,address==Адрес,phone==Телефон,email==Адрес эл. почты,delivery==Способ доставки,payment==Способ оплаты,message==Комментарий`
 ]]
 
 <div class="row">
