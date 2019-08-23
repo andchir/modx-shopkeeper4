@@ -1,0 +1,117 @@
+[[!FormIt?
+&hooks=`spam,email,FormItAutoResponder,FormItSaveForm,redirect`
+&submitVar=`action_order`
+&emailTpl=`shoppingCart_orderReport`
+&fiarTpl=`shoppingCart_orderReport`
+&emailSubject=`В интернет-магазине "[[++site_name]]" сделан новый заказ`
+&fiarSubject=`Вы сделали заказ в интернет-магазине "[[++site_name]]"`
+&emailTo=`[[++emailsender]]`
+&fiarReplyTo=`[[++emailsender]]`
+&fiarToField=`email`
+&redirectTo=`8`
+&validate=`address:required,fullname:required,email:email:required,phone:required,delivery:required,payment:required`
+&errTpl=`<span class="error">[[+error]]</span>`
+&formFields=`fullname,address,phone,email,delivery,payment,comment`
+&fieldNames=``
+]]
+
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+
+        <p class="error">[[!+fi.error.error_message]]</p>
+        <br />
+
+        <form method="post" action="[[~[[*id]]]]" id="shopOrderForm">
+
+            <fieldset>
+
+                <input type="text" name="nospam:blank" value="" style="display:none;" />
+                <input type="hidden" name="action_order" value="1" />
+
+                <div class="form-group">
+                    <label for="orderFormName">Ф.И.О.*:</label>
+                    <input name="fullname" id="orderFormName" class="form-control" type="text" value="[[!+fi.fullname:default=`[[+modx.user.id:userinfo=`fullname`]]`:ne=`0`:show]]" />
+                    <p class="text-danger small">
+                        [[!+fi.error.fullname]]
+                    </p>
+                </div>
+
+                <div class="form-group">
+                    <label for="orderFormAddress">Адрес*:</label>
+                    <input name="address" id="orderFormAddress" class="form-control" type="text" value="[[!+fi.address:default=`[[+modx.user.id:userinfo=`address`]]`:ne=`0`:show]]" />
+                    <p class="text-danger small">
+                        [[!+fi.error.address]]
+                    </p>
+                </div>
+
+                <div class="row form-group">
+                    <div class="col-md-6">
+
+                        <label for="orderFormEmail">E-mail*:</label>
+                        <input name="email" id="orderFormEmail" class="form-control" type="text" value="[[!+fi.email:default=`[[+modx.user.id:userinfo=`email`]]`:ne=`0`:show]]" />
+                        <p class="text-danger small">
+                            [[!+fi.error.email]]
+                        </p>
+
+                    </div>
+                    <div class="col-md-6">
+
+                        <label for="orderFormPhone">Телефон*:</label>
+                        <input name="phone" id="orderFormPhone" class="form-control" type="text" value="[[!+fi.phone:default=`[[+modx.user.id:userinfo=`phone`]]`:ne=`0`:show]]" />
+                        <p class="text-danger small">
+                            [[!+fi.error.phone]]
+                        </p>
+
+                    </div>
+                </div>
+
+                <div class="row form-group">
+                    <div class="col-md-6">
+
+                        <label for="orderFormDelivery">Способ доставки*:</label>
+                        <select name="delivery" id="orderFormDelivery" class="form-control">
+                            <option value=""></option>
+                            <option value="Самовывоз" [[!+fi.delivery:FormItIsSelected=`Самовывоз`]]>Самовывоз</option>
+                            <option value="Почта России" [[!+fi.delivery:FormItIsSelected=`Почта России`]]>Почта России</option>
+                            <option value="Транспортная компания" [[!+fi.delivery:FormItIsSelected=`Транспортная компания`]]>Транспортная компания</option>
+                        </select>
+                        <p class="text-danger small">
+                            [[!+fi.error.delivery]]
+                        </p>
+
+                    </div>
+                    <div class="col-md-6">
+
+                        <label for="orderFormPayment">Способ оплаты*:</label>
+                        <select name="payment" id="orderFormPayment" class="form-control">
+                            <option value=""></option>
+                            <option value="Банковская карта" [[!+fi.payment:FormItIsSelected=`Банковская карта`]]>Банковская карта</option>
+                            <option value="Электронные деньги" [[!+fi.payment:FormItIsSelected=`Электронные деньги`]]>Электронные деньги</option>
+                            <option value="При получении" [[!+fi.payment:FormItIsSelected=`При получении`]]>При получении</option>
+                        </select>
+                        <p class="text-danger small">
+                            [[!+fi.error.payment]]
+                        </p>
+
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="orderFormComment">
+                        Комментарий:
+                    </label>
+                    <textarea name="message" id="orderFormComment" class="form-control" rows="4" cols="30">[[!+fi.message]]</textarea>
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" name="submit_button" class="button btn btn-primary btn-lg">
+                        Отправить
+                    </button>
+                </div>
+
+            </fieldset>
+
+        </form>
+
+    </div>
+</div>
