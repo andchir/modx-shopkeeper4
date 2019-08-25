@@ -21,7 +21,7 @@ if (isset($formit) && $formit instanceof FormIt) {
     $shoppingCart->updateConfig([
         'rowTpl' => $modx->getOption('shoppingCartMailRowTpl', $formit->config, 'shoppingCart_mailOrderRowTpl'),
         'outerTpl' => $modx->getOption('shoppingCartMailOuterTpl', $formit->config, 'shoppingCart_mailOrderOuterTpl'),
-        'contentType' => 'shop'
+        'contentType' => $modx->getOption('shoppingCartMailContentType', $formit->config, 'shop')
     ]);
     $shoppingCartObject = $shoppingCart->getShoppingCart($shoppingCart->getUserId(), $shoppingCart->getSessionId());
     if (empty($shoppingCartObject) || !count($shoppingCartObject->getMany('Content'))) {
@@ -29,6 +29,9 @@ if (isset($formit) && $formit instanceof FormIt) {
         return false;
     }
     $orderData = $modx->invokeEvent( ShoppingCart::EVENT_OnShoppingCartCheckoutSave, ['object' => $shoppingCartObject]);
+    if ($orderData) {
+        $orderData = current($orderData);
+    }
     if (empty($orderData)) {
         $orderData = [];
     }

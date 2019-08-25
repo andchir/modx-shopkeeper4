@@ -97,6 +97,29 @@ class Shopkeeper4 {
     }
 
     /**
+     * @param string $collectionName
+     * @return int
+     */
+    public function getNextId($collectionName)
+    {
+        $autoincrementCollection = $this->getCollection('doctrine_increment_ids');
+        $count = $autoincrementCollection->count(['_id' => $collectionName]);
+        if(!$count){
+            $record = [
+                '_id' => $collectionName,
+                'current_id' => 0
+            ];
+            $autoincrementCollection->insertOne($record);
+        }
+        $ret = $autoincrementCollection->findOneAndUpdate(
+            ['_id' => $collectionName],
+            ['$inc' => ['current_id' => 1]],
+            ['new' => true]
+        );
+        return $ret['current_id'];
+    }
+
+    /**
      * @param string $categoryUri
      * @param int|null $categoryId
      * @return array|null|object
