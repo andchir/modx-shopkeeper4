@@ -1,5 +1,5 @@
 [[!FormIt?
-&hooks=`spam,shoppingCart,email,FormItAutoResponder,FormItSaveForm,redirect`
+&hooks=`spam,shoppingCart,FormItSaveForm,email,FormItAutoResponder,redirect`
 &submitVar=`action_order`
 &emailTpl=`shoppingCart_orderReport`
 &fiarTpl=`shoppingCart_orderReport`
@@ -8,7 +8,7 @@
 &emailTo=`[[++emailsender]]`
 &fiarReplyTo=`[[++emailsender]]`
 &fiarToField=`email`
-&redirectTo=`9`
+&redirectTo=`8`
 &validate=`address:required,fullname:required,email:email:required,phone:required,delivery:required,payment:required`
 &errTpl=`<span class="error">[[+error]]</span>`
 &formFields=`fullname,address,phone,email,delivery,payment,message`

@@ -7,6 +7,7 @@
 class ShoppingCart {
 
     const EVENT_OnShoppingCartAddProduct = 'OnShoppingCartAddProduct';
+    const EVENT_OnShoppingCartCheckoutSave = 'OnShoppingCartCheckoutSave';
     const SESSION_KEY = 'shoppingcart_sessid';
 
     public $modx;
@@ -317,9 +318,10 @@ class ShoppingCart {
     }
 
     /**
+     * @param array $properties
      * @return string
      */
-    public function renderOutput()
+    public function renderOutput($properties = [])
     {
         $shoppingCart = $this->getShoppingCart($this->getUserId(), $this->getSessionId());
         /** @var xPDOObject[] $shoppingCartContent */
@@ -337,7 +339,7 @@ class ShoppingCart {
         if ($this->config['rowTpl']) {
             $index = 0;
             foreach ($shoppingCartContent as $content) {
-                $output .= $this->modx->getChunk($this->config['rowTpl'], array_merge($content->toArray(), [
+                $output .= $this->modx->getChunk($this->config['rowTpl'], array_merge($content->toArray(), $properties, [
                     'index' => $index,
                     'num' => $index + 1,
                     'priceTotal' => self::getContentPriceTotal($content)
@@ -350,12 +352,12 @@ class ShoppingCart {
             }
         }
         if ($this->config['outerTpl']) {
-            $output = $this->modx->getChunk($this->config['outerTpl'], [
+            $output = $this->modx->getChunk($this->config['outerTpl'], array_merge($properties, [
                 'wrapper' => $output,
                 'priceTotal' => $priceTotal,
                 'countTotal' => $countTotal,
                 'currency' => $shoppingCart->get('currency')
-            ]);
+            ]));
             if (!$output) {
                 $this->setErrorMessage("Chunk \"{$this->config['outerTpl']}\" not found.", __LINE__);
             }
