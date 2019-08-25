@@ -90,6 +90,15 @@ switch($eventName) {
 
         require_once $modx->getOption('core_path') . 'components/shopping_cart/model/shopping_cart/shoppingcart.class.php';
         $shopCart = new ShoppingCart($modx);
+        $shopCartSettings = $shopkeeper4->getSettings('SETTINGS_ORDER_STATUSES');
+
+        if (!$shopCartSettings) {
+            if ($shopkeeper4->getIsError()) {
+                $modx->log(modX::LOG_LEVEL_ERROR, $shopkeeper4->getErrorMessage());
+            }
+            $modx->event->output($output);
+            return '';
+        }
         $orderCollection = $shopkeeper4->getCollection('order');
 
         if (empty($object)
@@ -104,13 +113,14 @@ switch($eventName) {
 
         $user = $object->getMany('Owner');
 
+        // Order data
         $order = [
             'email' => $_POST['email'] ?? '',
             'fullName' => $_POST['fullname'] ?? '',
             'phone' => $_POST['phone'] ?? '',
-            'createdDate' => '',
-            'updatedDate' => '',
-            'status' => '',
+            'createdDate' => new MongoDB\BSON\UTCDateTime(),
+            'updatedDate' => new MongoDB\BSON\UTCDateTime(),
+            'status' => !empty($shopCartSettings) ? $shopCartSettings[0]->name : '',
             'deliveryName' => $_POST['delivery'] ?? '',
             'deliveryPrice' => 0,
             'paymentName' => $_POST['payment'] ?? '',
@@ -122,6 +132,18 @@ switch($eventName) {
             'content' => []
         ];
 
+        // Contacts data
+        foreach ($_POST as $key => $value) {
+            if (in_array($key, ['address', 'state', 'zip', 'city', 'street', 'house', 'apartment'])) {
+                $order['options'][] = [
+                    'name' => $key,
+                    'title' => $modx->lexicon('shopping_cart.' . $key),
+                    'value' => $value
+                ];
+            }
+        }
+
+        // Purchased products
         foreach ($shoppingCartContent as $content) {
             $options = $content->get('options') ?: [];
             $order['content'][] = [

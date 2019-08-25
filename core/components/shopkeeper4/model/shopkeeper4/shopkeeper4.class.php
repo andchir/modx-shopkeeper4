@@ -976,6 +976,25 @@ class Shopkeeper4 {
     }
 
     /**
+     * @param string $groupName
+     * @return array|bool
+     */
+    public function getSettings($groupName = '')
+    {
+        $settingsCollection = $this->getCollection('settings');
+        if (!$settingsCollection) {
+            return false;
+        }
+        $where = [];
+        if ($groupName) {
+            $where['groupName'] = $groupName;
+        }
+        return $settingsCollection->find($where, [
+            'typeMap' => ['array' => 'array']
+        ])->toArray();
+    }
+
+    /**
      * @param string $currentUri
      * @param array $contentTypeFields
      * @param array $catalogNavSettingsDefaults
