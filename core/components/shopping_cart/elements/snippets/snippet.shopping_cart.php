@@ -15,25 +15,34 @@ $shoppingCart = $modx->getService(
 );
 if (!($shoppingCart instanceof ShoppingCart)) return '';
 
-
+// Save order data for email
 if (isset($formit) && $formit instanceof FormIt) {
 
+    $shoppingCart->updateConfig([
+        'rowTpl' => $modx->getOption('shoppingCartMailRowTpl', $formit->config, 'shoppingCart_mailOrderRowTpl'),
+        'outerTpl' => $modx->getOption('shoppingCartMailOuterTpl', $formit->config, 'shoppingCart_mailOrderOuterTpl'),
+        'contentType' => 'shop'
+    ]);
     $shoppingCartObject = $shoppingCart->getShoppingCart($shoppingCart->getUserId(), $shoppingCart->getSessionId());
     if (empty($shoppingCartObject) || !count($shoppingCartObject->getMany('Content'))) {
-        $hook->addError( 'error_message', $modx->lexicon('shopping_cart.order_empty') );
+        $hook->addError('error_message', $modx->lexicon('shopping_cart.order_empty'));
         return false;
     }
     $orderData = $modx->invokeEvent( ShoppingCart::EVENT_OnShoppingCartCheckoutSave, ['object' => $shoppingCartObject]);
-
-    $shoppingCart->updateConfig([
-        'rowTpl' => $modx->getOpton('shopping_cart.mail_order_data_outer_tpl', null, ''),
-        'outerTpl' => $modx->getOpton('shopping_cart.mail_order_data_row_tpl', null, '')
-    ]);
+    if (empty($orderData)) {
+        $orderData = [];
+    }
     $orderOutputData = $shoppingCart->renderOutput($orderData);
 
-    //var_dump($formit->config); exit;
-    // TODO: Create orderOutputData option for FromIt
-    // $hook->setValues($orderOutputData);
+    $hook->setValues([
+        'orderOutputData' => $orderOutputData,
+        'orderId' => $orderData['orderId'] ?? '',
+        'orderDate' => '',
+        'orderCurrency' => $shoppingCartObject->get('currency')
+    ]);
+    if ($modx->getOption('shoppingCartClean', $formit->config, true)) {
+        $shoppingCart->clean();
+    }
 
     return true;
 }

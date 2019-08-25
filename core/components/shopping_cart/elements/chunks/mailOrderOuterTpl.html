@@ -1,0 +1,27 @@
+<table class="table">
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Наименование</th>
+        <th>Цена</th>
+        <th>Кол-во</th>
+        <th>общая цена</th>
+    </tr>
+    </thead>
+        <tbody>
+            [[+wrapper]]
+        </tbody>
+    <tfoot>
+        <tr>
+            <td colspan="4" class="text-right">
+                Общая цена:
+            </td>
+            <td>
+                <b>
+                    [[+priceTotal:numFormat]]
+                    [[+currency]]
+                </b>
+            </td>
+        </tr>
+    </tfoot>
+</table>

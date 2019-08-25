@@ -5,20 +5,22 @@
 &fiarTpl=`shoppingCart_orderReport`
 &emailSubject=`В интернет-магазине "[[++site_name]]" сделан новый заказ`
 &fiarSubject=`Вы сделали заказ в интернет-магазине "[[++site_name]]"`
+&emailFrom=`[[++emailsender]]`
 &emailTo=`[[++emailsender]]`
 &fiarReplyTo=`[[++emailsender]]`
 &fiarToField=`email`
 &redirectTo=`8`
 &validate=`address:required,fullname:required,email:email:required,phone:required,delivery:required,payment:required`
-&errTpl=`<span class="error">[[+error]]</span>`
-&formFields=`fullname,address,phone,email,delivery,payment,message`
-&fieldNames=`fullname==Ф.И.О,address==Адрес,phone==Телефон,email==Адрес эл. почты,delivery==Способ доставки,payment==Способ оплаты,message==Комментарий`
+&formFields=`fullname,address,phone,email,delivery,payment,message,orderOutputData`
+&fieldNames=`fullname==Ф.И.О,address==Адрес,phone==Телефон,email==Адрес эл. почты,delivery==Способ доставки,payment==Способ оплаты,message==Комментарий,orderOutputData==Состав заказа`
+&shoppingCartMailRowTpl=`shoppingCart_mailOrderRowTpl`
+&shoppingCartMailOuterTpl=`shoppingCart_mailOrderOuterTpl`
 ]]
 
 <div class="row">
     <div class="col-md-8 offset-md-2">
 
-        <p class="error">[[!+fi.error.error_message]]</p>
+        <p class="text-danger">[[!+fi.error.error_message]]</p>
         <br />
 
         <form method="post" action="[[~[[*id]]]]" id="shopOrderForm">
