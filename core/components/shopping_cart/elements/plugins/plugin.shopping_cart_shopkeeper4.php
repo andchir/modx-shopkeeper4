@@ -169,6 +169,7 @@ switch($eventName) {
         break;
 }
 
+$modx->event->_output = '';// Clear current event output (bugfix)
 $modx->event->output($output);
 
 return '';
