@@ -97,6 +97,11 @@ switch($modx->event->name) {
         if (!isset($pageData['pagetitle'])) {
             $pageData['pagetitle'] = $pageData['title'] ?? '';
         }
+        if (!isset($pageData['parent'])) {
+            $pageData['parent'] = $pageData['parentId'] ?? 0;
+        }
+
+        $modx->toPlaceholders($pageData, 'page');
 
         $modx->resource = $modx->newObject('modResource');
         $modx->resource->fromArray($pageData);

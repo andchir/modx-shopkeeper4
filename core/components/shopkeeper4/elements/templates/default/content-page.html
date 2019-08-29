@@ -25,7 +25,7 @@
 
         <form id="shk-form" action="[[~6]]" method="post">
             <input type="hidden" name="item_id" value="[[*id]]">
-            <input type="hidden" name="category_id" value="[[*parentId]]">
+            <input type="hidden" name="category_id" value="[[*parent]]">
             <div>
                 <div class="column-left">
 
@@ -43,7 +43,7 @@
                     </div>
                     <div class="my-3">
                         Цена:
-                        <span class="big font-weight-bold shk-price">[[*price]]</span>
+                        <span class="big font-weight-bold shk-price">[[+page.price:numFormat]]</span>
                         <span class="shk-currency">[[+shk4.currency]]</span>
                     </div>
                     <div class="my-3">
