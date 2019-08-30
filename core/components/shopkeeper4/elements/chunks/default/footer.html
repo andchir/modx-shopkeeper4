@@ -21,20 +21,7 @@
     </div>
 </div>
 
-[[!shoppingCart?
-&action=`print`
-&contentType=`shop`
-&rowTpl=``
-&outerTpl=`shoppingCartSmall_outerTpl`
-&emptyTpl=``
-]]
+[[!shoppingCart@shoppingCartSmall]]
 
 <script src="[[++base_url]]assets/components/shopkeeper4/app_build/app.js"></script>
 <script src="[[++base_url]]assets/components/shopping_cart/js/shopping_cart.js"></script>
-<script>
-    var shoppingCart = new ShoppingCart({
-        baseUrl: '[[++base_url]]',
-        snippetPropertySetName: 'shoppingCartFull',
-        selector: '#shoppingCartContainer'
-    });
-</script>

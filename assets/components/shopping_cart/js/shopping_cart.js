@@ -39,7 +39,8 @@
             selectorPriceTotal: '.shopping-cart-price-total',
             selectorCountTotal: '.shopping-cart-count-total',
             selectorCountUniqueTotal: '.shopping-cart-count-unique-total',
-            selectorDeclension: '.shopping-cart-declension'
+            selectorDeclension: '.shopping-cart-declension',
+            productFormSelector: ''
         };
 
         /**
@@ -58,6 +59,7 @@
                 return;
             }
             this.submitFormInit();
+            this.productSubmitFormInit();
             isInitialized = true;
         };
 
@@ -84,23 +86,32 @@
                 formData.append(actionName, actionValue);
                 formData.append('propertySetName', mainOptions.snippetPropertySetName);
 
-                self.showLoading(true);
-                self.ajax(mainOptions.baseUrl + mainOptions.connectorUrl, formData, function(response) {
-                    if (!response.success) {
-                        self.showLoading(false);
-                        return;
-                    }
-                    self.updateElementsBySelectors(response);
-                    self.containerUpdate(response.html);
-                }, function(response) {
-                    self.showLoading(false);
-                }, 'POST');
-
+                self.formDataSend(formData);
             });
             formEl.querySelectorAll('button[type="submit"]').forEach(function(buttonEl) {
                 buttonEl.addEventListener('click', function(event) {
                     actionName = buttonEl.getAttribute('name');
                     actionValue = buttonEl.value;
+                });
+            });
+        };
+
+        /**
+         * Product add to shopping cart initialize
+         */
+        this.productSubmitFormInit = function() {
+            if (!mainOptions.productFormSelector) {
+                return;
+            }
+            document.querySelectorAll(mainOptions.productFormSelector).forEach(function(formEl) {
+                formEl.addEventListener('submit', function(event) {
+                    event.preventDefault();
+
+                    var formData = new FormData(formEl);
+                    formData.append('action', 'add_to_cart');
+                    formData.append('propertySetName', mainOptions.snippetPropertySetName);
+
+                    self.formDataSend(formData);
                 });
             });
         };
@@ -137,6 +148,24 @@
             elementsCountUniqueTotal.forEach(function (el) {
                 el.textContent = data.items_unique_total;
             });
+        };
+
+        /**
+         * Send FormData to connector
+         * @param formData
+         */
+        this.formDataSend = function(formData) {
+            this.showLoading(true);
+            self.ajax(mainOptions.baseUrl + mainOptions.connectorUrl, formData, function(response) {
+                if (!response.success) {
+                    self.showLoading(false);
+                    return;
+                }
+                self.updateElementsBySelectors(response);
+                self.containerUpdate(response.html);
+            }, function(response) {
+                self.showLoading(false);
+            }, 'POST');
         };
 
         /**
@@ -196,9 +225,8 @@
             if (show) {
                 container.classList.add('shopping-cart-loading');
             } else {
-                //container.classList.remove('shopping-cart-loading');
+                container.classList.remove('shopping-cart-loading');
             }
-            console.log('showLoading', show);
         };
 
         /**

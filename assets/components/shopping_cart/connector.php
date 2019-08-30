@@ -11,8 +11,8 @@ if(!defined('MODX_CORE_PATH')) require_once '../../../config.core.php';
 require_once MODX_CORE_PATH . 'config/' . MODX_CONFIG_KEY . '.inc.php';
 require_once MODX_CORE_PATH . 'model/modx/modx.class.php';
 $modx = new modX();
-$modx->initialize( 'web' );
-$modx->invokeEvent("OnLoadWebDocument");
+$modx->initialize('web');
+// $modx->invokeEvent('OnLoadWebDocument');
 
 if ($modx->getOption('shopping_cart.debug', null, false)) {
     ini_set('display_errors', 1);

@@ -1,6 +1,6 @@
 <div class="col-6 col-lg-4">
-    <div class="card mb-3">
-        <div class="card-body">
+    <div class="card mb-3 shk-item">
+        <div class="card-body p-2">
             <h3>
                 <a href="[[+shk4.categoryUri]][[+name]]">
                     [[+title]]
@@ -11,10 +11,26 @@
                     <img class="d-block w-100" src="[[shk4ImageUrl?imagePath=`[[+image.dirPath]]/[[+image.fileName]].[[+image.extension]]`&filter=`thumb_small`]]" alt="">
                 </a>
             </div>
-            <div>
+            <div class="mb-3">
                 <span class="big shk-price">[[+price]]</span>
                 <span class="shk-currency">руб.</span>
             </div>
+            
+            <form id="shk-form" action="[[~6]]" method="post">
+                <input type="hidden" name="item_id" value="[[+id]]">
+                <input type="hidden" name="category_id" value="[[+parentId]]">
+                <div class="row no-gutters">
+                    <div class="col-5">
+                        <input type="number" class="form-control d-inline-block text-center" value="1" min="1" step="1" name="count">
+                    </div>
+                    <div class="col-7 pl-2">
+                        <button type="submit" class="btn btn-primary btn-block" name="submit_button">
+                            В корзину
+                        </button>
+                    </div>
+                </div>
+            </form>
+
         </div>
     </div>
 </div>

@@ -1,0 +1,12 @@
+[[!shoppingCart?contentType=`shop`&action=`print`]]
+
+<script>
+    var shoppingCart;
+    document.addEventListener('DOMContentLoaded', function() {
+        shoppingCart = new ShoppingCart({
+            baseUrl: '[[++base_url]]',
+            snippetPropertySetName: 'shoppingCartFull',
+            selector: '#shoppingCartContainer'
+        });
+    });
+</script>

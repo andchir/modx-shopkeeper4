@@ -19,7 +19,7 @@
 
     [[+breadcrumbs]]
 
-    <div class="min-height400">
+    <div class="min-height400 shk-item">
 
         <h1>[[*pagetitle]]</h1>
 
@@ -62,6 +62,18 @@
 </main>
 
 [[$shk4_footer]]
+
+<script>
+    var shoppingCart;
+    document.addEventListener('DOMContentLoaded', function() {
+        shoppingCart = new ShoppingCart({
+            baseUrl: '[[++base_url]]',
+            snippetPropertySetName: 'shoppingCartSmall',
+            selector: '#shoppingCartSmallContainer',
+            productFormSelector: '.shk-item form'
+        });
+    });
+</script>
 
 </body>
 </html>

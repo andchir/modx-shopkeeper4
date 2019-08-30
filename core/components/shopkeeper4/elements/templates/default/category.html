@@ -77,17 +77,24 @@
     </div>
 </main>
 
+[[$shk4_footer]]
+
 <script>
+    var shoppingCart;
     document.addEventListener('DOMContentLoaded', function() {
         if (shk) {
             shk.onAfterInit(function() {
                 shk.filtersInit(true);
             });
         }
+        shoppingCart = new ShoppingCart({
+            baseUrl: '[[++base_url]]',
+            snippetPropertySetName: 'shoppingCartSmall',
+            selector: '#shoppingCartSmallContainer',
+            productFormSelector: '.shk-item form'
+        });
     });
 </script>
-
-[[$shk4_footer]]
 
 </body>
 </html>
