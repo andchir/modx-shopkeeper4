@@ -43,6 +43,15 @@
             productFormSelector: ''
         };
 
+        this.data = {
+            price_total: 0,
+            items_total: 0,
+            items_unique_total: 0,
+            delivery_name: '',
+            delivery_price: 0,
+            ids: []
+        };
+
         /**
          * Initialization
          */
@@ -61,6 +70,33 @@
             this.submitFormInit();
             this.productSubmitFormInit();
             isInitialized = true;
+        };
+
+        /**
+         * Add event listener
+         * @param {string} eventName
+         * @param {function} callbackFunc
+         * @param {object|boolean} options
+         * @returns {ShoppingCart}
+         */
+        this.addEventListener = function(eventName, callbackFunc, options) {
+            if (options) {
+                window.addEventListener('ShopCart' + this.capitalizeString(eventName), callbackFunc, options);
+            } else {
+                window.addEventListener('ShopCart' + this.capitalizeString(eventName), callbackFunc);
+            }
+            return this;
+        };
+
+        /**
+         * Dispatch event
+         * @param eventName
+         * @param eventData
+         */
+        this.dispatchEvent = function(eventName, eventData) {
+            window.dispatchEvent(new CustomEvent('ShopCart' + this.capitalizeString(eventName), {
+                detail: eventData || {}
+            }));
         };
 
         /**
@@ -86,6 +122,7 @@
                 formData.append(actionName, actionValue);
                 formData.append('propertySetName', mainOptions.snippetPropertySetName);
 
+                self.dispatchEvent('beforeFormSubmit', {formData: formData});
                 self.formDataSend(formData);
             });
             formEl.querySelectorAll('button[type="submit"]').forEach(function(buttonEl) {
@@ -111,6 +148,7 @@
                     formData.append('action', 'add_to_cart');
                     formData.append('propertySetName', mainOptions.snippetPropertySetName);
 
+                    self.dispatchEvent('beforeFormSubmit', {formData: formData});
                     self.formDataSend(formData);
                 });
             });
@@ -127,12 +165,25 @@
         };
 
         /**
+         * Update shopping cart data
+         * @param {object} data
+         */
+        this.updateData = function(data) {
+            this.data.price_total = data.price_total || 0;
+            this.data.items_total = data.items_total || 0;
+            this.data.items_unique_total = data.items_unique_total || 0;
+            this.data.delivery_name = data.delivery_name || '';
+            this.data.delivery_price = data.delivery_price || 0;
+            this.data.ids = data.ids || [];
+        };
+
+        /**
          * Update the contents of elements with data of the shopping cart
-         * @param data
+         * @param {object} data
          */
         this.updateElementsBySelectors = function(data) {
-            if (!data || !data.price_total || !data.items_total) {
-                return;
+            if (data) {
+                this.updateData(data);
             }
             var elementsTotalPrice = document.querySelectorAll(mainOptions.selectorPriceTotal),
                 elementsCountTotal = document.querySelectorAll(mainOptions.selectorCountTotal),
@@ -140,13 +191,15 @@
                 elementsDeclension = document.querySelectorAll(mainOptions.selectorDeclension);
 
             elementsTotalPrice.forEach(function (el) {
-                el.textContent = mainOptions.useNumberFormat ? self.numFormat(data.price_total) : data.price_total;
+                el.textContent = mainOptions.useNumberFormat
+                    ? self.numFormat(self.data.price_total)
+                    : self.data.price_total;
             });
             elementsCountTotal.forEach(function (el) {
-                el.textContent = data.items_total;
+                el.textContent = self.data.items_total;
             });
             elementsCountUniqueTotal.forEach(function (el) {
-                el.textContent = data.items_unique_total;
+                el.textContent = self.data.items_unique_total;
             });
         };
 
@@ -161,8 +214,10 @@
                     self.showLoading(false);
                     return;
                 }
+                self.updateData(response);
                 self.updateElementsBySelectors(response);
                 self.containerUpdate(response.html);
+                self.dispatchEvent('load', self.extend(response, {container: container}));
             }, function(response) {
                 self.showLoading(false);
             }, 'POST');
@@ -194,6 +249,7 @@
                         failFn(result);
                     }
                 }
+                self.dispatchEvent('requestAfter', {request: request});
             };
 
             request.onerror = function() {
@@ -206,6 +262,7 @@
             if (!(data instanceof FormData)) {
                 request.setRequestHeader('Content-type', 'application/json; charset=utf-8');
             }
+            this.dispatchEvent('requestBefore', {request: request});
             if (method === 'POST') {
                 request.send(data);
             } else {
@@ -265,6 +322,15 @@
          */
         this.numFormat = function(n){
             return this.number_format(n, (Math.floor(n)===n ? 0 : 2), '.', ' ');
+        };
+
+        /**
+         * Uppercase first letter
+         * @param string
+         * @returns {string}
+         */
+        this.capitalizeString = function(string) {
+            return string.charAt(0).toUpperCase() + string.slice(1);
         };
 
         /**

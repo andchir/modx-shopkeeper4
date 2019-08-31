@@ -1,7 +1,7 @@
 <?php
 
 /*
- * array $scriptProperties
+ * @var array $scriptProperties
  * @var modX $modx
  * @var FormIt $formit
  * @var fiHooks $hook
