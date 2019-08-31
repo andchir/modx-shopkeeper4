@@ -32,7 +32,7 @@
                 <input type="hidden" name="action_order" value="1" />
 
                 <div class="form-group">
-                    <label for="orderFormName">Ф.И.О.*:</label>
+                    <label for="orderFormName">[[%shopping_cart.full_name?namespace=`shopping_cart`]]:</label>
                     <input name="fullname" id="orderFormName" class="form-control" type="text" value="[[!+fi.fullname:default=`[[+modx.user.id:userinfo=`fullname`]]`:ne=`0`:show]]" />
                     <p class="text-danger small">
                         [[!+fi.error.fullname]]
@@ -40,7 +40,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="orderFormAddress">Адрес*:</label>
+                    <label for="orderFormAddress">[[%shopping_cart.address?namespace=`shopping_cart`]]:</label>
                     <input name="address" id="orderFormAddress" class="form-control" type="text" value="[[!+fi.address:default=`[[+modx.user.id:userinfo=`address`]]`:ne=`0`:show]]" />
                     <p class="text-danger small">
                         [[!+fi.error.address]]
@@ -50,7 +50,7 @@
                 <div class="row form-group">
                     <div class="col-md-6">
 
-                        <label for="orderFormEmail">E-mail*:</label>
+                        <label for="orderFormEmail">[[%shopping_cart.email?namespace=`shopping_cart`]]:</label>
                         <input name="email" id="orderFormEmail" class="form-control" type="text" value="[[!+fi.email:default=`[[+modx.user.id:userinfo=`email`]]`:ne=`0`:show]]" />
                         <p class="text-danger small">
                             [[!+fi.error.email]]
@@ -59,7 +59,7 @@
                     </div>
                     <div class="col-md-6">
 
-                        <label for="orderFormPhone">Телефон*:</label>
+                        <label for="orderFormPhone">[[%shopping_cart.phone?namespace=`shopping_cart`]]:</label>
                         <input name="phone" id="orderFormPhone" class="form-control" type="text" value="[[!+fi.phone:default=`[[+modx.user.id:userinfo=`phone`]]`:ne=`0`:show]]" />
                         <p class="text-danger small">
                             [[!+fi.error.phone]]
@@ -71,12 +71,12 @@
                 <div class="row form-group">
                     <div class="col-md-6">
 
-                        <label for="orderFormDelivery">Способ доставки*:</label>
+                        <label for="orderFormDelivery">[[%shopping_cart.delivery_method?namespace=`shopping_cart`]]:</label>
                         <select name="delivery" id="orderFormDelivery" class="form-control">
                             <option value=""></option>
-                            <option value="Самовывоз" [[!+fi.delivery:FormItIsSelected=`Самовывоз`]]>Самовывоз</option>
-                            <option value="Почта России" [[!+fi.delivery:FormItIsSelected=`Почта России`]]>Почта России</option>
-                            <option value="Транспортная компания" [[!+fi.delivery:FormItIsSelected=`Транспортная компания`]]>Транспортная компания</option>
+                            <option value="[[%shopping_cart.self_export?namespace=`shopping_cart`]]" [[!+fi.delivery:FormItIsSelected=`Самовывоз`]]>[[%shopping_cart.self_export?namespace=`shopping_cart`]]</option>
+                            <option value="[[%shopping_cart.postal_service?namespace=`shopping_cart`]]" [[!+fi.delivery:FormItIsSelected=`Почта России`]]>[[%shopping_cart.postal_service?namespace=`shopping_cart`]]</option>
+                            <option value="[[%shopping_cart.transport_company?namespace=`shopping_cart`]]" [[!+fi.delivery:FormItIsSelected=`Транспортная компания`]]>[[%shopping_cart.transport_company?namespace=`shopping_cart`]]</option>
                         </select>
                         <p class="text-danger small">
                             [[!+fi.error.delivery]]
@@ -85,12 +85,12 @@
                     </div>
                     <div class="col-md-6">
 
-                        <label for="orderFormPayment">Способ оплаты*:</label>
+                        <label for="orderFormPayment">[[%shopping_cart.payment_method?namespace=`shopping_cart`]]:</label>
                         <select name="payment" id="orderFormPayment" class="form-control">
                             <option value=""></option>
-                            <option value="Банковская карта" [[!+fi.payment:FormItIsSelected=`Банковская карта`]]>Банковская карта</option>
-                            <option value="Электронные деньги" [[!+fi.payment:FormItIsSelected=`Электронные деньги`]]>Электронные деньги</option>
-                            <option value="При получении" [[!+fi.payment:FormItIsSelected=`При получении`]]>При получении</option>
+                            <option value="[[%shopping_cart.bank_card?namespace=`shopping_cart`]]" [[!+fi.payment:FormItIsSelected=`Банковская карта`]]>[[%shopping_cart.bank_card?namespace=`shopping_cart`]]</option>
+                            <option value="[[%shopping_cart.electronic_money?namespace=`shopping_cart`]]" [[!+fi.payment:FormItIsSelected=`Электронные деньги`]]>[[%shopping_cart.electronic_money?namespace=`shopping_cart`]]</option>
+                            <option value="[[%shopping_cart.payment_upon_receipt?namespace=`shopping_cart`]]" [[!+fi.payment:FormItIsSelected=`При получении`]]>[[%shopping_cart.payment_upon_receipt?namespace=`shopping_cart`]]</option>
                         </select>
                         <p class="text-danger small">
                             [[!+fi.error.payment]]
@@ -101,14 +101,14 @@
 
                 <div class="form-group">
                     <label for="orderFormComment">
-                        Комментарий:
+                        [[%shopping_cart.comment?namespace=`shopping_cart`]]:
                     </label>
                     <textarea name="message" id="orderFormComment" class="form-control" rows="4" cols="30">[[!+fi.message]]</textarea>
                 </div>
 
                 <div class="form-group">
                     <button type="submit" name="submit_button" class="button btn btn-primary btn-lg">
-                        Отправить
+                        [[%shopping_cart.submit?namespace=`shopping_cart`]]
                     </button>
                 </div>
 

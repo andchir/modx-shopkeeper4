@@ -3,19 +3,21 @@
         <form action="[[~6]]" method="post">
             <div class="container">
                 <div class="float-md-left">
-                    Выбрано товаров:
+                    [[%shopping_cart.selected_items?namespace=`shopping_cart`]]:
                     <span class="badge badge-pill badge-light big mx-2 shopping-cart-count-total">
                         [[+countTotal]]
                     </span>
-                    <span class="shopping-cart-declension" data-value="товар|товара|товаров">[[+countTotal:units=`товар|товара|товаров`]]</span>
-                    на сумму
+                    <span class="shopping-cart-declension" data-value="[[%shopping_cart.declension_products?namespace=`shopping_cart`]]">
+                        [[+countTotal:units=`[[%shopping_cart.declension_products?namespace=`shopping_cart`]]`]]
+                    </span>
+                    [[%shopping_cart.totaling?namespace=`shopping_cart`]]:
                     <span class="badge badge-light big mx-2 shk-price shopping-cart-price-total">[[+priceTotal:numFormat]]</span>
                     <span class="shk-currency">[[+currency]]</span>
                 </div>
                 <div class="float-md-right mt-3 mt-md-0">
                     [[*id:ne=`5`:then=`
                     <a class="btn btn-outline-light" href="[[~5]]">
-                        Оформить заказ
+                        [[%shopping_cart.checkout?namespace=`shopping_cart`]]
                     </a>
                     `:else=``]]
                     <button type="submit" class="btn btn-outline-light ml-1" data-toggle="tooltip" data-placement="top" title="Очистить" name="action" value="clean">
