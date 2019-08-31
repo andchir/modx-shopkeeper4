@@ -122,7 +122,7 @@
                 formData.append(actionName, actionValue);
                 formData.append('propertySetName', mainOptions.snippetPropertySetName);
 
-                self.dispatchEvent('beforeFormSubmit', {element: formEl, formData: formData});
+                self.dispatchEvent('formSubmitBefore', {element: formEl, formData: formData});
                 self.formDataSend(formData);
             });
             formEl.querySelectorAll('button[type="submit"]').forEach(function(buttonEl) {
@@ -148,7 +148,7 @@
                     formData.append('action', 'add_to_cart');
                     formData.append('propertySetName', mainOptions.snippetPropertySetName);
 
-                    self.dispatchEvent('beforeFormSubmit', {element: formEl, formData: formData});
+                    self.dispatchEvent('formSubmitBefore', {element: formEl, formData: formData});
                     self.formDataSend(formData, formEl);
                 });
             });

@@ -94,7 +94,7 @@
             productFormSelector: '.shk-item form'
         });
         shoppingCart
-            .addEventListener('beforeFormSubmit', function(e) {
+            .addEventListener('formSubmitBefore', function(e) {
                 var buttonEl = e.detail.element.querySelector('button[type="submit"]');
                 if (buttonEl) {
                     buttonEl.setAttribute('disabled', '');
