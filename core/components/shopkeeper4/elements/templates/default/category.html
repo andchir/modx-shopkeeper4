@@ -93,6 +93,21 @@
             selector: '#shoppingCartSmallContainer',
             productFormSelector: '.shk-item form'
         });
+        shoppingCart
+            .addEventListener('beforeFormSubmit', function(e) {
+                var buttonEl = e.detail.element.querySelector('button[type="submit"]');
+                if (buttonEl) {
+                    buttonEl.setAttribute('disabled', '');
+                }
+            })
+            .addEventListener('load', function(e) {
+                if (e.detail.element) {
+                    var buttonEl = e.detail.element.querySelector('button[type="submit"]');
+                    if (buttonEl) {
+                        buttonEl.removeAttribute('disabled');
+                    }
+                }
+            });
     });
 </script>
 

@@ -122,7 +122,7 @@
                 formData.append(actionName, actionValue);
                 formData.append('propertySetName', mainOptions.snippetPropertySetName);
 
-                self.dispatchEvent('beforeFormSubmit', {formData: formData});
+                self.dispatchEvent('beforeFormSubmit', {element: formEl, formData: formData});
                 self.formDataSend(formData);
             });
             formEl.querySelectorAll('button[type="submit"]').forEach(function(buttonEl) {
@@ -148,8 +148,8 @@
                     formData.append('action', 'add_to_cart');
                     formData.append('propertySetName', mainOptions.snippetPropertySetName);
 
-                    self.dispatchEvent('beforeFormSubmit', {formData: formData});
-                    self.formDataSend(formData);
+                    self.dispatchEvent('beforeFormSubmit', {element: formEl, formData: formData});
+                    self.formDataSend(formData, formEl);
                 });
             });
         };
@@ -205,9 +205,10 @@
 
         /**
          * Send FormData to connector
-         * @param formData
+         * @param {FormData} formData
+         * @param {HTMLElement} formEl
          */
-        this.formDataSend = function(formData) {
+        this.formDataSend = function(formData, formEl) {
             this.showLoading(true);
             self.ajax(mainOptions.baseUrl + mainOptions.connectorUrl, formData, function(response) {
                 if (!response.success) {
@@ -217,9 +218,11 @@
                 self.updateData(response);
                 self.updateElementsBySelectors(response);
                 self.containerUpdate(response.html);
-                self.dispatchEvent('load', self.extend(response, {container: container}));
+                self.showLoading(false);
+                self.dispatchEvent('load', self.extend(response, {container: container, element: formEl || null}));
             }, function(response) {
                 self.showLoading(false);
+                self.dispatchEvent('load', self.extend(response, {container: container, element: formEl || null}));
             }, 'POST');
         };
 
