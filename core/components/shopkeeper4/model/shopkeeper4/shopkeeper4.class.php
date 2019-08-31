@@ -530,12 +530,12 @@ class Shopkeeper4 {
         if ($locale === $localeDefault && $addFieldsOnly) {
             return [];
         }
-        foreach ($contentType['fields'] as $contentTypeField) {
+        foreach ($contentType->fields as $contentTypeField) {
             if ($locale !== $localeDefault
-                && in_array($contentTypeField['inputType'], ['text', 'textarea', 'rich_text'])) {
-                $aggregateFields[$contentTypeField['name']] = "\$translations.{$contentTypeField['name']}.{$locale}";
+                && in_array($contentTypeField->inputType, ['text', 'textarea', 'rich_text'])) {
+                $aggregateFields[$contentTypeField->name] = "\$translations.{$contentTypeField->name}.{$locale}";
             } else if (!$addFieldsOnly) {
-                $aggregateFields[$contentTypeField['name']] = 1;
+                $aggregateFields[$contentTypeField->name] = 1;
             }
         }
         if (!$addFieldsOnly) {
@@ -1350,7 +1350,7 @@ class Shopkeeper4 {
     {
         $input = self::objectToArray($input);
         foreach ($input as $key => $value) {
-            if (is_object($value)) {
+            if (is_object($value) || is_array($value)) {
                 $placeholders = self::createPlaceholdersArray($value, ($parentKey ? $parentKey.'.' : '') . $key, $placeholders);
             } else {
                 $placeholders[($parentKey ? $parentKey.'.' : '') . $key] = $value;

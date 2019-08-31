@@ -13,11 +13,11 @@
 
 <p><b>[[++site_name]]</b></p>
 
-<p>В интернет-магазине сделан заказ.</p>
+<p>[[%shopping_cart.order_has_been_made?namespace=`shopping_cart`]].</p>
 
 <div style="padding:15px 0; margin:15px 0; border-top:3px solid #BCBCBC; border-bottom:3px solid #BCBCBC;">
 
-    <p>Номер заказа: [[+orderId]]</p>
+    <p>[[%shopping_cart.order_number?namespace=`shopping_cart`]]: [[+orderId]]</p>
 
     [[+orderOutputData]]
 

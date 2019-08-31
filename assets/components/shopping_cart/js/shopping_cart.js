@@ -159,7 +159,9 @@
          * @param html
          */
         this.containerUpdate = function(html) {
-            container.outerHTML = html;
+            if (container) {
+                container.outerHTML = html;
+            }
             container = document.querySelector(mainOptions.selector);
             this.submitFormInit();
         };

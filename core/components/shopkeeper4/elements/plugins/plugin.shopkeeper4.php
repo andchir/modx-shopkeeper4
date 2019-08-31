@@ -88,11 +88,14 @@ switch($modx->event->name) {
         $modx->setPlaceholder('shk4.filtersCount', count($filtersQueryData));
 
         if ($isCategory) {
-            $pageData = $category ? json_decode(json_encode($category), true) : [];
+            $pageData = $category ? Shopkeeper4::objectToArray($category) : [];
         } else {
             $contentObject = $shopkeeper4->getCatalogItem($category->_id, $contentType->collection, $pageAlias);
-            $pageData = $contentObject ? json_decode(json_encode($contentObject), true) : [];
+            $pageData = $contentObject ? Shopkeeper4::objectToArray($contentObject) : [];
         }
+        $pageData = array_filter($pageData, function($value) {
+            return !is_array($value);
+        });
         $pageData['id'] = $pageData['_id'] ?? 0;
         if (!isset($pageData['pagetitle'])) {
             $pageData['pagetitle'] = $pageData['title'] ?? '';

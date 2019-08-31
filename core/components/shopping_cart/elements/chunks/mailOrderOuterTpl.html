@@ -2,10 +2,10 @@
     <thead>
     <tr>
         <th>ID</th>
-        <th>Наименование</th>
-        <th>Цена</th>
-        <th>Кол-во</th>
-        <th>общая цена</th>
+        <th>[[%shopping_cart.product_name?namespace=`shopping_cart`]]</th>
+        <th>[[%shopping_cart.price?namespace=`shopping_cart`]]</th>
+        <th>[[%shopping_cart.quantity?namespace=`shopping_cart`]]</th>
+        <th>[[%shopping_cart.total_price?namespace=`shopping_cart`]]</th>
     </tr>
     </thead>
         <tbody>
@@ -14,7 +14,7 @@
     <tfoot>
         <tr>
             <td colspan="4" class="text-right">
-                Общая цена:
+                [[%shopping_cart.total_price?namespace=`shopping_cart`]]:
             </td>
             <td>
                 <b>
