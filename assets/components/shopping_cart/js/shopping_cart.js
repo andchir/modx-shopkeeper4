@@ -57,6 +57,10 @@
          */
         this.init = function() {
             options = options || {};
+            if (typeof options.data === 'object') {
+                this.updateData(options.data);
+                delete options.data;
+            }
             if (Object.keys(options).length > 0) {
                 this.extend(mainOptions, options);
             }

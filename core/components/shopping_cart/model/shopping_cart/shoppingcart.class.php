@@ -85,6 +85,24 @@ class ShoppingCart {
     }
 
     /**
+     * Create placeholders with shopping cart data
+     */
+    public function createPagePlaceholders()
+    {
+        $shoppingCart = $this->getShoppingCart($this->getUserId(), $this->getSessionId());
+        $shoppingCartContent = $shoppingCart ? $shoppingCart->getMany('Content') : [];
+        $placeholders = [
+            'price_total' => $this->getTotalPrice($shoppingCartContent),
+            'items_total' => $this->getTotalCount($shoppingCartContent),
+            'items_unique_total' => count($shoppingCartContent),
+            'delivery_price' => 0,
+            'delivery_name' => 0,
+            'ids' => implode(',', ShoppingCart::getContentValues($shoppingCartContent, 'item_id')),
+        ];
+        $this->modx->setPlaceholders($placeholders, 'shopping_cart.');
+    }
+
+    /**
      * @param bool $returnArray
      * @return string|array
      */

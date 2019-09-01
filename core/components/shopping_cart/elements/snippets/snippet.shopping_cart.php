@@ -51,6 +51,7 @@ if (isset($formit) && $formit instanceof FormIt) {
 }
 
 $shoppingCart->updateConfig($scriptProperties);
+$shoppingCart->createPagePlaceholders();
 $output = $shoppingCart->actionResponse();
 
 return $output;
