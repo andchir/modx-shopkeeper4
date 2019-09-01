@@ -26,7 +26,10 @@ switch($eventName) {
         $itemCount = $scriptProperties['data']['count'] ? (float) $scriptProperties['data']['count'] : 1;
 
         /** @var modResource $contentObject */
-        $contentObject = $modx->getObject('modResource', $itemId);
+        $contentObject = $modx->getObject('modResource', [
+            'id' => $itemId,
+            'published' => true
+        ]);
 
         if (!$contentObject) {
             $modx->log(modX::LOG_LEVEL_ERROR, "Catalog item with ID \"{$itemId}\" not found.");

@@ -52,14 +52,14 @@ $events = [];
 $events['OnShoppingCartAddProduct'] = $modx->newObject('modPluginEvent');
 $events['OnShoppingCartAddProduct']->fromArray([
     'event' => 'OnShoppingCartAddProduct',
-    'priority' => 2,
+    'priority' => 1,
     'propertyset' => 0,
 ], '', true, true);
 
 $events['OnShoppingCartCheckoutSave'] = $modx->newObject('modPluginEvent');
 $events['OnShoppingCartCheckoutSave']->fromArray([
     'event' => 'OnShoppingCartCheckoutSave',
-    'priority' => 2,
+    'priority' => 1,
     'propertyset' => 0,
 ], '', true, true);
 
@@ -87,14 +87,14 @@ $events = [];
 $events['OnShoppingCartAddProduct'] = $modx->newObject('modPluginEvent');
 $events['OnShoppingCartAddProduct']->fromArray([
     'event' => 'OnShoppingCartAddProduct',
-    'priority' => 2,
+    'priority' => 1,
     'propertyset' => 0,
 ], '', true, true);
 
 $events['OnShoppingCartCheckoutSave'] = $modx->newObject('modPluginEvent');
 $events['OnShoppingCartCheckoutSave']->fromArray([
     'event' => 'OnShoppingCartCheckoutSave',
-    'priority' => 2,
+    'priority' => 1,
     'propertyset' => 0,
 ], '', true, true);
 

@@ -235,7 +235,7 @@ class ShoppingCart {
      */
     public function addToCartAction()
     {
-        $itemData = $this->modx->invokeEvent( self::EVENT_OnShoppingCartAddProduct, ['data' => $_POST]);
+        $itemData = $this->modx->invokeEvent(self::EVENT_OnShoppingCartAddProduct, ['data' => $_POST]);
         if (empty($itemData)
             || empty($itemData[0])
             || empty($itemData[0]['title'])) {
@@ -421,11 +421,14 @@ class ShoppingCart {
         if (empty($shoppingCartContent)) {
             return -1;
         }
-        $index = array_search($itemData['id'], array_column($shoppingCartContent, 'item_id', 'id'));
-        if ($index === false
-            || ($shoppingCartContent[$index]->get('price') != $itemData['price']
-                || $shoppingCartContent[$index]->get('options') != $itemData['options'])) {
-            return -1;
+        $index = -1;
+        foreach ($shoppingCartContent as $ind => $content) {
+            if ($content->get('item_id') == $itemData['id']
+                && $content->get('price') == $itemData['price']
+                && $content->get('options') == $itemData['options']) {
+                    $index = $ind;
+                    break;
+            }
         }
         return $index;
     }
