@@ -18,7 +18,7 @@ set_time_limit(0);
 define('PKG_NAME', 'shopkeeper4');
 define('PKG_NAME_LOWER', 'shopkeeper4');
 define('PKG_VERSION', '1.0.0');
-define('PKG_RELEASE', 'beta');
+define('PKG_RELEASE', 'beta1');
 
 /* define build paths */
 $root = dirname(dirname(dirname(__FILE__))) . '/';
