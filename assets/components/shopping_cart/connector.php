@@ -55,7 +55,7 @@ if ($shopCart->getIsError()) {
         'items_unique_total' => count($shoppingCartContent),
         'delivery_price' => 0,
         'delivery_name' => 0,
-        'ids' => [],
+        'ids' => ShoppingCart::getContentValues($shoppingCartContent, 'item_id'),
         'html' => $shopCart->renderOutput()
     ];
 }

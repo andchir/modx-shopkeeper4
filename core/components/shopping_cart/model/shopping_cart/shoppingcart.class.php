@@ -356,6 +356,7 @@ class ShoppingCart {
                 'wrapper' => $output,
                 'priceTotal' => $priceTotal,
                 'countTotal' => $countTotal,
+                'countTotalUnique' => count($shoppingCartContent),
                 'currency' => $shoppingCart->get('currency')
             ]));
             if (!$output) {
@@ -458,6 +459,20 @@ class ShoppingCart {
         setcookie(self::SESSION_KEY, $sessionId, time()+$this->config['lifeTime'], '/');
         return $sessionId;
     }
+
+    /**
+     * @param xPDOObject[] $shoppingCartContent
+     * @param string $key
+     * @return array
+     */
+    public static function getContentValues($shoppingCartContent, $key)
+    {
+        $outputArr = array_map(function($content) use ($key) {
+            return $content->get($key) ?: '';
+        }, $shoppingCartContent);
+        return array_unique(array_merge($outputArr));
+    }
+
 
     /**
      * @param xPDOObject $shoppingCartContentItem

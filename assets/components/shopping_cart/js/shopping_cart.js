@@ -187,10 +187,18 @@
             if (data) {
                 this.updateData(data);
             }
-            var elementsTotalPrice = document.querySelectorAll(mainOptions.selectorPriceTotal),
-                elementsCountTotal = document.querySelectorAll(mainOptions.selectorCountTotal),
-                elementsCountUniqueTotal = document.querySelectorAll(mainOptions.selectorCountUniqueTotal),
-                elementsDeclension = document.querySelectorAll(mainOptions.selectorDeclension);
+            var elementsTotalPrice = mainOptions.selectorPriceTotal
+                    ? document.querySelectorAll(mainOptions.selectorPriceTotal)
+                    : [],
+                elementsCountTotal = mainOptions.selectorCountTotal
+                    ? document.querySelectorAll(mainOptions.selectorCountTotal)
+                    : [],
+                elementsCountUniqueTotal = mainOptions.selectorCountUniqueTotal
+                    ? document.querySelectorAll(mainOptions.selectorCountUniqueTotal)
+                    : [],
+                elementsDeclension = mainOptions.selectorDeclension
+                    ? document.querySelectorAll(mainOptions.selectorDeclension)
+                    : [];
 
             elementsTotalPrice.forEach(function (el) {
                 el.textContent = mainOptions.useNumberFormat
@@ -202,6 +210,13 @@
             });
             elementsCountUniqueTotal.forEach(function (el) {
                 el.textContent = self.data.items_unique_total;
+            });
+            elementsDeclension.forEach(function (el) {
+                var words = el.dataset.value ? el.dataset.value.split('|') : [];
+                if (words.length === 0) {
+                    return;
+                }
+                el.textContent = self.wordDeclension(self.data.items_total, words);
             });
         };
 
@@ -319,6 +334,26 @@
                 }
             }
             return out;
+        };
+
+        /**
+         * Word declension
+         * @param n
+         * @param textForms
+         * @returns {*}
+         */
+        this.wordDeclension = function(n, textForms) {
+            if (textForms.length === 1) {
+                return textForms[0];
+            }
+            if (textForms.length < 3) {
+                textForms.push(textForms[1]);
+            }
+            n = Math.abs(n) % 100; var n1 = n % 10;
+            if (n > 10 && n < 20) { return textForms[2]; }
+            if (n1 > 1 && n1 < 5) { return textForms[1]; }
+            if (n1 === 1) { return textForms[0]; }
+            return textForms[2];
         };
 
         /**
