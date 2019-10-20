@@ -30,3 +30,6 @@ $_lang['shopping_cart.quantity'] = 'Кол-во';
 $_lang['shopping_cart.total_price'] = 'Общая цена';
 $_lang['shopping_cart.order_has_been_made'] = 'В интернет-магазине сделан заказ';
 $_lang['shopping_cart.order_number'] = 'Номер заказа';
+$_lang['shopping_cart.favorites'] = 'Избранное';
+$_lang['shopping_cart.to_favorites'] = 'В избранное';
+$_lang['shopping_cart.remove_from_favorites'] = 'Убрать из избранного';

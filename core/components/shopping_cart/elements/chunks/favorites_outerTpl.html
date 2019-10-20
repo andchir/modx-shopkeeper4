@@ -1,6 +1,6 @@
 <div id="shoppingCartContainer">
     <form action="[[~6]]" method="post">
-        <input type="hidden" name="type" value="shop">
+        <input type="hidden" name="type" value="favorites">
         <div class="float-right">
             <button class="btn btn-outline-info btn-sm mb-2" type="submit" name="action" value="clean">
                 <i class="icon-cross"></i>
@@ -10,17 +10,11 @@
         <div class="clearfix"></div>
         <table class="table">
             <tbody>
-            [[+wrapper]]
+                [[+wrapper]]
             </tbody>
             <tfoot>
             <tr>
-                <th colspan="4">
-                    <div class="float-left">
-                        <button type="submit" class="btn btn-sm btn-info" name="action" value="update">
-                            <i class="icon-reload"></i>
-                            [[%shopping_cart.recount?namespace=`shopping_cart`]]
-                        </button>
-                    </div>
+                <th colspan="2">
                     <div class="text-right">
                         [[%shopping_cart.total?namespace=`shopping_cart`]]:
                     </div>
@@ -33,11 +27,5 @@
             </tfoot>
         </table>
     </form>
-    <div class="float-right">
-        <a class="btn btn-outline-info" href="[[~7]]">
-            [[%shopping_cart.continue?namespace=`shopping_cart`]]
-            <i class="icon-keyboard_arrow_right"></i>
-        </a>
-    </div>
     <div class="clearfix"></div>
 </div>

@@ -30,3 +30,6 @@ $_lang['shopping_cart.quantity'] = 'Quantity';
 $_lang['shopping_cart.total_price'] = 'Total price';
 $_lang['shopping_cart.order_has_been_made'] = 'An order has been made in the online store';
 $_lang['shopping_cart.order_number'] = 'Order number';
+$_lang['shopping_cart.favorites'] = 'Favorites';
+$_lang['shopping_cart.to_favorites'] = 'To favorites';
+$_lang['shopping_cart.remove_from_favorites'] = 'Remove from favorites';

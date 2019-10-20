@@ -21,25 +21,45 @@
 
     <div class="min-height400 shk-item">
 
+        <div class="float-lg-right mb-3 text-right">
+            [[!shoppingCart@favorites]]
+        </div>
+
         <h1>[[*pagetitle]]</h1>
 
-        <form id="shk-form" action="[[~6]]" method="post">
-            <input type="hidden" name="item_id" value="[[*id]]">
-            <input type="hidden" name="category_id" value="[[*parent]]">
-            <div>
-                <div class="column-left">
+        <div>
+            <div class="column-left">
 
-                    <div id="carouselImageGallery" class="carousel slide mb-5" data-ride="false" data-interval="false">
-                        <div class="carousel-inner border">
-                            <img src="/assets/components/shopkeeper4/img/nofoto.png" alt="" style="width: 100%;">
-                        </div>
+                <div class="position-relative js-shopping-cart-favorites">
+                    <div class="position-absolute pos-right-top10" style="z-index: 100;">
+                        <form action="[[~6]]" method="post">
+                            <input type="hidden" name="item_id" value="[[*id]]">
+                            <input type="hidden" name="category_id" value="[[*parent]]">
+                            <input type="hidden" name="type" value="favorites">
+                            <button class="btn btn-outline-secondary" type="submit" data-toggle="tooltip" name="action" value="add_to_cart" title="[[%shopping_cart.to_favorites?namespace=`shopping_cart`]]">
+                                <i class="icon-heart1"></i>
+                            </button>
+                        </form>
                     </div>
-
                 </div>
-                <div class="column-right">
+
+                <div id="carouselImageGallery" class="carousel slide mb-5" data-ride="false" data-interval="false">
+                    <div class="carousel-inner border">
+                        <img src="/assets/components/shopkeeper4/img/nofoto.png" alt="" style="width: 100%;">
+                    </div>
+                </div>
+
+            </div>
+            <div class="column-right js-shopping-cart-product">
+
+                <form id="shk-form" action="[[~6]]" method="post">
+                    <input type="hidden" name="item_id" value="[[*id]]">
+                    <input type="hidden" name="category_id" value="[[*parent]]">
+                    <input type="hidden" name="type" value="shop">
 
                     <div class="my-3">
                         [[*description]]
+                        [[*content]]
                     </div>
                     <div class="my-3">
                         Цена:
@@ -52,11 +72,11 @@
                             В корзину
                         </button>
                     </div>
+                </form>
 
-                </div>
-                <div class="clearfix"></div>
             </div>
-        </form>
+            <div class="clearfix"></div>
+        </div>
 
     </div>
 </main>
@@ -70,7 +90,7 @@
             baseUrl: '[[++base_url]]',
             snippetPropertySetName: 'shoppingCartSmall',
             selector: '#shoppingCartSmallContainer',
-            productFormSelector: '.shk-item form'
+            productFormSelector: '.js-shopping-cart-product form'
         });
     });
 </script>

@@ -1,0 +1,12 @@
+[[!shoppingCart@favoritesFull]]
+
+<script>
+    var favorites;
+    document.addEventListener('DOMContentLoaded', function() {
+        favorites = new ShoppingCart({
+            baseUrl: '[[++base_url]]',
+            snippetPropertySetName: 'favoritesFull',
+            selector: '#favoritesContainer'
+        });
+    });
+</script>

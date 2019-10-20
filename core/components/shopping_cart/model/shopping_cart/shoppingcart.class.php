@@ -174,10 +174,14 @@ class ShoppingCart {
      * @param null|string $sessionId
      * @param null|int $id
      * @param bool $create
+     * @param null $contentType
      * @return null|xPDOObject
      */
-    public function getShoppingCart($userId = null, $sessionId = null, $id = null, $create = false)
+    public function getShoppingCart($userId = null, $sessionId = null, $id = null, $create = false, $contentType = null)
     {
+        if (!$contentType) {
+            $contentType = $this->config['contentType'];
+        }
         /** @var xPDOObject $shoppingCart */
         if ($id) {
             $shoppingCart = $this->modx->getObject('ShoppingCartItem', (int) $id);
@@ -195,7 +199,7 @@ class ShoppingCart {
             } else if ($sessionId) {
                 $query->where(['session_id' => $sessionId]);
             }
-            $query->andCondition(['type' => $this->config['contentType']]);
+            $query->andCondition(['type' => $contentType]);
             $shoppingCart = $this->modx->getObject('ShoppingCartItem', $query);
         } else {
             return null;
@@ -207,7 +211,7 @@ class ShoppingCart {
                 'createdon' => strftime('%Y-%m-%d %H:%M:%S'),
                 'editedon' => strftime('%Y-%m-%d %H:%M:%S'),
                 'currency' => $this->config['currency'],
-                'type' => $this->config['contentType']
+                'type' => $contentType
             ]);
             if ($this->config['lifeTime']) {
                 $shoppingCart->set('expireson', strftime('%Y-%m-%d %H:%M:%S', time() + $this->config['lifeTime']));
@@ -242,7 +246,8 @@ class ShoppingCart {
                 return false;
         }
         $itemData = current($itemData);
-        $shoppingCart = $this->getShoppingCart($this->getUserId(), $this->getSessionId(), null, true);
+        $contentType = isset($_POST['type']) ? $_POST['type'] : $this->config['contentType'];
+        $shoppingCart = $this->getShoppingCart($this->getUserId(), $this->getSessionId(), null, true, $contentType);
         /** @var xPDOObject[] $shoppingCartContent */
         $shoppingCartContent = $shoppingCart->getMany('Content');
         $contentIndex = $this->getContentIndex($shoppingCartContent, $itemData);
@@ -275,7 +280,8 @@ class ShoppingCart {
         if (empty($_POST['count'])) {
             return false;
         }
-        $shoppingCart = $this->getShoppingCart($this->getUserId(), $this->getSessionId());
+        $contentType = isset($_POST['type']) ? $_POST['type'] : $this->config['contentType'];
+        $shoppingCart = $this->getShoppingCart($this->getUserId(), $this->getSessionId(), null, false, $contentType);
         if (!$shoppingCart) {
             return false;
         }
@@ -297,7 +303,8 @@ class ShoppingCart {
      */
     public function clean()
     {
-        $shoppingCart = $this->getShoppingCart($this->getUserId(), $this->getSessionId());
+        $contentType = isset($_POST['type']) ? $_POST['type'] : $this->config['contentType'];
+        $shoppingCart = $this->getShoppingCart($this->getUserId(), $this->getSessionId(), null, false, $contentType);
         if (!$shoppingCart) {
             return false;
         }
@@ -316,7 +323,8 @@ class ShoppingCart {
      */
     public function removeByIndex($index)
     {
-        $shoppingCart = $this->getShoppingCart($this->getUserId(), $this->getSessionId());
+        $contentType = isset($_POST['type']) ? $_POST['type'] : $this->config['contentType'];
+        $shoppingCart = $this->getShoppingCart($this->getUserId(), $this->getSessionId(), null, false, $contentType);
         if (!$shoppingCart) {
             return false;
         }

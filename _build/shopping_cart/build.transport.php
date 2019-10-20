@@ -114,6 +114,12 @@ $attr = array(
 );
 $vehicle = $builder->createVehicle($category, $attr);
 
+/* tables */
+$modx->log(modX::LOG_LEVEL_INFO,'Adding in PHP resolvers...');
+$vehicle->resolve('php',array(
+    'source' => $sources['resolvers'] . 'resolve.tables.inc.php',
+));
+
 /* resolvers */
 $modx->log(modX::LOG_LEVEL_INFO,'Adding file resolvers to category...');
 $vehicle->resolve('file', array(
@@ -127,11 +133,6 @@ $vehicle->resolve('file', array(
 //$vehicle->resolve('php', array(
 //    'source' => $sources['resolvers'] . 'setupoptions.resolver.php',
 //));
-
-$modx->log(modX::LOG_LEVEL_INFO,'Adding in PHP resolvers...');
-$vehicle->resolve('php',array(
-    'source' => $sources['resolvers'] . 'resolve.tables.inc.php',
-));
 
 $builder->putVehicle($vehicle);
 

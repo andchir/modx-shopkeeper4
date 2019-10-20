@@ -1,6 +1,6 @@
 /**
  * ShoppingCart
- * @version 1.0.0
+ * @version 1.0.1
  * @author Andchir<andchir@gmail.com>
  */
 
@@ -28,28 +28,33 @@
 
     function ShoppingCart(options) {
 
-        var self = this, isInitialized = false, container = null, callbacks = [];
+        var TYPE_MAIN = 'shop';
+        var self = this, isInitialized = false, container = null, shoppingCartContentType = '';
 
         var mainOptions = {
             baseUrl: '/',
             connectorUrl: 'assets/components/shopping_cart/connector.php',
             snippetPropertySetName: '',
-            selector: '#shoppingCartContainer',
+            selector: '',
             useNumberFormat: true,
             selectorPriceTotal: '.shopping-cart-price-total',
             selectorCountTotal: '.shopping-cart-count-total',
             selectorCountUniqueTotal: '.shopping-cart-count-unique-total',
             selectorDeclension: '.shopping-cart-declension',
-            productFormSelector: ''
+            productFormSelector: '',
+            templateName: '',
+            autoUpdateElements: false
         };
 
         this.data = {
-            price_total: 0,
-            items_total: 0,
-            items_unique_total: 0,
-            delivery_name: '',
-            delivery_price: 0,
-            ids: []
+            shop: {
+                price_total: 0,
+                items_total: 0,
+                items_unique_total: 0,
+                delivery_name: '',
+                delivery_price: 0,
+                ids: []
+            }
         };
 
         /**
@@ -57,22 +62,21 @@
          */
         this.init = function() {
             options = options || {};
-            if (typeof options.data === 'object') {
-                this.updateData(options.data);
-                delete options.data;
-            }
             if (Object.keys(options).length > 0) {
                 this.extend(mainOptions, options);
             }
-            container = document.querySelector(mainOptions.selector);
-            if (!container) {
-                if (console && console.log) {
+            if (mainOptions.selector) {
+                container = document.querySelector(mainOptions.selector);
+                if (!container && console && console.log) {
                     console.log('[ShoppingCart] Container selector not found.');
                 }
-                return;
             }
             this.submitFormInit();
             this.productSubmitFormInit();
+            if (typeof options.data === 'object') {
+                this.updateData(options.data);
+                delete mainOptions.data;
+            }
             isInitialized = true;
         };
 
@@ -84,10 +88,12 @@
          * @returns {ShoppingCart}
          */
         this.addEventListener = function(eventName, callbackFunc, options) {
+            eventName = this.capitalizeString(eventName);
+            eventName += '_' + shoppingCartContentType;
             if (options) {
-                window.addEventListener('ShopCart' + this.capitalizeString(eventName), callbackFunc, options);
+                window.addEventListener('ShopCart' + eventName, callbackFunc, options);
             } else {
-                window.addEventListener('ShopCart' + this.capitalizeString(eventName), callbackFunc);
+                window.addEventListener('ShopCart' + eventName, callbackFunc);
             }
             return this;
         };
@@ -98,7 +104,9 @@
          * @param eventData
          */
         this.dispatchEvent = function(eventName, eventData) {
-            window.dispatchEvent(new CustomEvent('ShopCart' + this.capitalizeString(eventName), {
+            eventName = this.capitalizeString(eventName);
+            eventName += '_' + shoppingCartContentType;
+            window.dispatchEvent(new CustomEvent('ShopCart' + eventName, {
                 detail: eventData || {}
             }));
         };
@@ -113,6 +121,9 @@
             var formEl = container.querySelector('form'),
                 actionName = '',
                 actionValue = '';
+            if (!shoppingCartContentType) {
+                self.updateShoppingCartContentType(formEl);
+            }
             if (!formEl) {
                 if (console && console.log) {
                     console.log('[ShoppingCart] Shopping Cart form element not found.');
@@ -121,20 +132,35 @@
             }
             formEl.addEventListener('submit', function(event) {
                 event.preventDefault();
-
                 var formData = new FormData(formEl);
                 formData.append(actionName, actionValue);
-                formData.append('propertySetName', mainOptions.snippetPropertySetName);
-
+                if (mainOptions.snippetPropertySetName) {
+                    formData.append('propertySetName', mainOptions.snippetPropertySetName);
+                }
+                if (mainOptions.templateName) {
+                    formData.append('templateName', mainOptions.templateName);
+                }
                 self.dispatchEvent('formSubmitBefore', {element: formEl, formData: formData});
                 self.formDataSend(formData);
             });
-            formEl.querySelectorAll('button[type="submit"]').forEach(function(buttonEl) {
+            formEl.querySelectorAll('[type="submit"]').forEach(function(buttonEl) {
                 buttonEl.addEventListener('click', function(event) {
                     actionName = buttonEl.getAttribute('name');
                     actionValue = buttonEl.value;
                 });
             });
+        };
+
+        /**
+         * Update shopping cart type
+         * @param formEl
+         */
+        this.updateShoppingCartContentType = function(formEl) {
+            if (!formEl) {
+                return;
+            }
+            var typeInputEl = formEl.querySelector('input[name="type"]');
+            shoppingCartContentType = typeInputEl ? typeInputEl.value : TYPE_MAIN;
         };
 
         /**
@@ -144,16 +170,33 @@
             if (!mainOptions.productFormSelector) {
                 return;
             }
-            document.querySelectorAll(mainOptions.productFormSelector).forEach(function(formEl) {
+            var forms = document.querySelectorAll(mainOptions.productFormSelector),
+                actionName = '',
+                actionValue = '';
+            if (!shoppingCartContentType && forms.length > 0) {
+                self.updateShoppingCartContentType(forms[0]);
+            }
+            forms.forEach(function(formEl) {
                 formEl.addEventListener('submit', function(event) {
                     event.preventDefault();
 
                     var formData = new FormData(formEl);
-                    formData.append('action', 'add_to_cart');
-                    formData.append('propertySetName', mainOptions.snippetPropertySetName);
-
+                    actionValue = actionValue || 'add_to_cart';
+                    formData.append('action', actionValue);
+                    if (mainOptions.snippetPropertySetName) {
+                        formData.append('propertySetName', mainOptions.snippetPropertySetName);
+                    }
+                    if (mainOptions.templateName) {
+                        formData.append('templateName', mainOptions.templateName);
+                    }
                     self.dispatchEvent('formSubmitBefore', {element: formEl, formData: formData});
                     self.formDataSend(formData, formEl);
+                });
+                formEl.querySelectorAll('[type="submit"]').forEach(function(buttonEl) {
+                    buttonEl.addEventListener('click', function(event) {
+                        actionName = buttonEl.getAttribute('name');
+                        actionValue = buttonEl.value;
+                    });
                 });
             });
         };
@@ -163,6 +206,9 @@
          * @param html
          */
         this.containerUpdate = function(html) {
+            if (!mainOptions.selector) {
+                return;
+            }
             if (container) {
                 container.outerHTML = html;
             }
@@ -175,12 +221,16 @@
          * @param {object} data
          */
         this.updateData = function(data) {
-            this.data.price_total = data.price_total || 0;
-            this.data.items_total = data.items_total || 0;
-            this.data.items_unique_total = data.items_unique_total || 0;
-            this.data.delivery_name = data.delivery_name || '';
-            this.data.delivery_price = data.delivery_price || 0;
-            this.data.ids = data.ids || [];
+            var type = data.type || shoppingCartContentType;
+            if (!this.data[type]) {
+                this.data[type] = {};
+            }
+            this.data[type].price_total = data.price_total || 0;
+            this.data[type].items_total = data.items_total || 0;
+            this.data[type].items_unique_total = data.items_unique_total || 0;
+            this.data[type].delivery_name = data.delivery_name || '';
+            this.data[type].delivery_price = data.delivery_price || 0;
+            this.data[type].ids = data.ids || [];
         };
 
         /**
@@ -206,21 +256,21 @@
 
             elementsTotalPrice.forEach(function (el) {
                 el.textContent = mainOptions.useNumberFormat
-                    ? self.numFormat(self.data.price_total)
-                    : self.data.price_total;
+                    ? self.numFormat(self.data[shoppingCartContentType].price_total)
+                    : self.data[shoppingCartContentType].price_total;
             });
             elementsCountTotal.forEach(function (el) {
-                el.textContent = self.data.items_total;
+                el.textContent = self.data[shoppingCartContentType].items_total;
             });
             elementsCountUniqueTotal.forEach(function (el) {
-                el.textContent = self.data.items_unique_total;
+                el.textContent = self.data[shoppingCartContentType].items_unique_total;
             });
             elementsDeclension.forEach(function (el) {
                 var words = el.dataset.value ? el.dataset.value.split('|') : [];
                 if (words.length === 0) {
                     return;
                 }
-                el.textContent = self.wordDeclension(self.data.items_total, words);
+                el.textContent = self.wordDeclension(self.data[shoppingCartContentType].items_total, words);
             });
         };
 
@@ -234,16 +284,21 @@
             self.ajax(mainOptions.baseUrl + mainOptions.connectorUrl, formData, function(response) {
                 if (!response.success) {
                     self.showLoading(false);
+                    self.dispatchEvent('load', {response: response, container: container, element: formEl || null});
                     return;
                 }
                 self.updateData(response);
-                self.updateElementsBySelectors(response);
-                self.containerUpdate(response.html);
+                if (mainOptions.autoUpdateElements) {
+                    self.updateElementsBySelectors(response);
+                }
+                if (typeof response.html !== 'undefined') {
+                    self.containerUpdate(response.html);
+                }
                 self.showLoading(false);
-                self.dispatchEvent('load', self.extend(response, {container: container, element: formEl || null}));
+                self.dispatchEvent('load', {response: response, container: container, element: formEl || null});
             }, function(response) {
                 self.showLoading(false);
-                self.dispatchEvent('load', self.extend(response, {container: container, element: formEl || null}));
+                self.dispatchEvent('load', {response: response, container: container, element: formEl || null});
             }, 'POST');
         };
 
