@@ -1,6 +1,10 @@
 Changelog
 =========
 
+1.0.1
 
+- JS script is update to version 1.0.1.
+- The content type of the shopping cart can be set in a hidden field.
+- Added templates for Favorites section.
 
 
